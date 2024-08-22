@@ -14,6 +14,6 @@ public class CommandLineProvider implements IAfterburnerProvider {
                 .filter(arg -> arg.startsWith(instructionPrefix))
                 .findFirst()
                 .map(arg -> arg.substring(instructionPrefix.length()).replace("\"", "").replace("<space>", " "))
-                .orElse("");
+                .orElse("N/A");
     }
 }
