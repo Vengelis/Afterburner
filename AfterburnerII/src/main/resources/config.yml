@@ -38,6 +38,7 @@ paths:
 # |                  Query Console settings                    |
 # #============================================================#
 #  Afterburner can receive instructions via socket server
+#  NOT IMPLEMENTED !!!
 
 query:
   host: "127.0.0.1"
