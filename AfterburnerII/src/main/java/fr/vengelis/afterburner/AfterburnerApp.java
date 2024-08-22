@@ -82,7 +82,7 @@ public class AfterburnerApp {
             exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "commonfiles");
             exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/mcplugins.yml", false);
             exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/mcworlds.yml", false);
-            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/ServerFiles.yml", false);
+            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/serverfiles.yml", false);
 
             exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "templates");
             if(!Afterburner.DISABLE_TEST_TEMPLATE) exporter.saveResource(new File(Afterburner.WORKING_AREA), "/templates/example.yml", false);
