@@ -1,0 +1,7 @@
+mcplugins:
+  - name: "MySpigotPlugin"
+    enabled: false
+    settings:
+      file-name: "MySpigotPlugin.jar"
+      config-folder: true
+      config-folder-name: "MySpigotPlugin"

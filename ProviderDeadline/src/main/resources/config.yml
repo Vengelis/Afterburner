@@ -1,0 +1,5 @@
+#  This provider allows you to retrieve information from the Deadline API (Deadline Thinkbox).
+#  The requested information is in the form of an object already predefined in the provider
+web-api:
+  host: "127.0.0.1"
+  port: 8081

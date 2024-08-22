@@ -1,0 +1,69 @@
+# #============================================================#
+# |                                                            |
+# |                   Afterburner settings                     |
+# |                                                            |
+# #============================================================#
+#  Configuration file defining how afterburner works
+#  This configuration file may be subject to change. Remember to check if the new versions are compatible with
+#  your old afterburner configuration files
+#  Afterburner is based on a folder shared with the machine that will run the Minecraft server.
+#  It will take everything you need from the folder, copy the data and paste it locally.
+#  First of all it cleans the folder (deletes everything), copies what it needs from the shared folder and pastes everything
+#  locally so that everything is executed locally. At the end of the execution nothing is deleted so that an analysis at the end
+#  of the execution is possible.
+
+#  DON'T TOUCH THIS !!!
+config-version: 2
+
+#  Afterburner is ready to use
+ready: false
+
+# #============================================================#
+# |                      Path settings                         |
+# #============================================================#
+#  The paths to the files and folders which will be used for the different afterburner modules
+#  - 'rendering-directory' defines where the server will be run on the machine running Afterburner
+#  - 'templates' defines the path to the pattern folder which will be drawn
+#  - 'world-batched' defines the map-picker world storage path
+#  - 'common-files' defines the path of common files
+
+paths:
+  rendering-directory: "/path/to/rendering"
+  templates: "/path/template"
+  worlds-batched: "/path/world/batched"
+  common-files: "/path/storage/common/files"
+  java: "/path/java/version" #Mettre juste : "java" pour utiliser la version par défaut des CT (java 8)
+
+# #============================================================#
+# |                  Query Console settings                    |
+# #============================================================#
+#  Afterburner can receive instructions via socket server
+
+query:
+  host: "127.0.0.1"
+  port: 46798
+  password: "strong-password"
+
+
+# #============================================================#
+# |                      Redis settings                        |
+# #============================================================#
+#  Afterburner can receive instructions via redis
+
+redis:
+  enabled: false
+  host: "127.0.0.1"
+  port: 6379
+  user: "default"
+  password: "password"
+  database: 0
+
+# #============================================================#
+# |                     Provider settings                      |
+# #============================================================#
+#  The provider is used to retrieve information that Afterburner needs to function
+provider:
+  - instruction: "PLAYER_REQUESTER"
+    system: "commandline"
+  - instruction: "JOB_ID"
+    system: "commandline"

@@ -1,0 +1,6 @@
+mcworlds:
+  - name: "MyWorldName"
+    enabled: false
+    settings:
+      folder-name: "world_name"
+      final-name: "final_world_name"

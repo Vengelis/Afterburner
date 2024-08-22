@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group = "fr.vengelis"
+version = ""
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+	compileOnly project(path: ':AfterburnerII')
+    implementation(group: 'com.google.code.gson', name: 'gson', version: '2.7')
+    implementation(group: 'org.yaml', name: 'snakeyaml', version: '2.2')
+}
+
+compileJava.getOptions().setEncoding("UTF-8")
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}

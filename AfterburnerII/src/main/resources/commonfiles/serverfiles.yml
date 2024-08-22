@@ -1,0 +1,7 @@
+serverfiles:
+  - name: "MySpigotPlugin"
+    enabled: false
+    settings:
+      file-name: "MySpigotPlugin.yml"
+      is-folder: false
+      rename-to: "MyConfig.yml"
