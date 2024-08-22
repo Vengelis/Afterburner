@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.commonfiles.impl;
+package fr.vengelis.afterburner.commonfiles.impl.minecraftserver;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

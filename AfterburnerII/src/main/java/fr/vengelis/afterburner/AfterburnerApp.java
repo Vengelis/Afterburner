@@ -5,8 +5,9 @@ import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.cli.CliManager;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.commonfiles.CommonFilesTypeManager;
-import fr.vengelis.afterburner.commonfiles.impl.McPlugins;
-import fr.vengelis.afterburner.commonfiles.impl.McWorlds;
+import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McPlugins;
+import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McWorlds;
+import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.ServerFiles;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.configurations.ConfigTemplate;
 import fr.vengelis.afterburner.events.EventManager;
@@ -35,6 +36,7 @@ import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.ResourceExporter;
 import org.apache.commons.io.FileUtils;
 import org.yaml.snakeyaml.Yaml;
+import sun.misc.Signal;
 
 import java.io.*;
 import java.util.*;
@@ -67,11 +69,15 @@ public class AfterburnerApp {
     private boolean reprepareEnabled = false;
     private int repreparedCount = 0;
     private final LinkedList<PrintedLog> logHistory = new LinkedList<>();
+    private boolean displayOutput;
 
-    public AfterburnerApp(String machineName, String templateName) {
+    public AfterburnerApp(String machineName, String templateName, boolean defaultDisplayProgramOutput) {
         instance = this;
         MACHINE_NAME = machineName;
         TEMPLATE = templateName;
+        displayOutput = defaultDisplayProgramOutput;
+
+        cliManager.init();
     }
 
     public void exportRessources() {
@@ -99,6 +105,7 @@ public class AfterburnerApp {
 
         commonFilesTypeManager.register(McPlugins.class);
         commonFilesTypeManager.register(McWorlds.class);
+        commonFilesTypeManager.register(ServerFiles.class);
 
         providerManager.loadProviders(Afterburner.WORKING_AREA + File.separator + "providers");
         providerManager.getProviders().forEach((n, p) -> {
@@ -142,11 +149,11 @@ public class AfterburnerApp {
             ConfigGeneral.READY.setData(data.get("ready"));
 
             Map<String, Object> paths = (Map<String, Object>) data.get("paths");
-            ConfigGeneral.PATH_RENDERING_DIRECTORY.setData(paths.get("rendering-directory"));
-            ConfigGeneral.PATH_TEMPLATE.setData(paths.get("templates"));
-            ConfigGeneral.PATH_WORLDS_BATCHED.setData(paths.get("worlds-batched"));
-            ConfigGeneral.PATH_COMMON_FILES.setData(paths.get("common-files"));
-            ConfigGeneral.PATH_JAVA.setData(paths.get("java"));
+            ConfigGeneral.PATH_RENDERING_DIRECTORY.setData(paths.get("rendering-directory").toString().replace("<space>", " "));
+            ConfigGeneral.PATH_TEMPLATE.setData(paths.get("templates").toString().replace("<space>", " "));
+            ConfigGeneral.PATH_WORLDS_BATCHED.setData(paths.get("worlds-batched").toString().replace("<space>", " "));
+            ConfigGeneral.PATH_COMMON_FILES.setData(paths.get("common-files").toString().replace("<space>", " "));
+            ConfigGeneral.PATH_JAVA.setData(paths.get("java").toString().replace("<space>", " "));
 
             Map<String, Object> query = (Map<String, Object>) data.get("query");
             ConfigGeneral.QUERY_HOST.setData(query.get("host"));
@@ -422,7 +429,7 @@ public class AfterburnerApp {
         for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS.getData())) {
             stb.append(" " + s);
         }
-        stb.append(" -jar " + ConfigGeneral.PATH_RENDERING_DIRECTORY.getData() + File.separator + ConfigTemplate.EXECUTABLE_NAME.getData())
+        stb.append(" -jar \"" + ConfigGeneral.PATH_RENDERING_DIRECTORY.getData() + File.separator + ConfigTemplate.EXECUTABLE_NAME.getData() + "\"")
                 .append(" DafterbunerUuid=" + uniqueId)
                 .append(" Djobid=" + providerManager.getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
                 .append(" DserverOwner=" + providerManager.getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
@@ -434,13 +441,12 @@ public class AfterburnerApp {
 
         try {
             ConsoleLogger.printLine(Level.INFO, "Forcing the program '" + ConfigTemplate.EXECUTABLE_NAME.getData() + "' into execution mode.");
-            File execFile = new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData() + File.separator + ConfigTemplate.EXECUTABLE_NAME.getData());
+            File execFile = new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData() + "/" + ConfigTemplate.EXECUTABLE_NAME.getData());
             if(execFile.setExecutable(true)) ConsoleLogger.printLine(Level.INFO, "Forcing success !");
             else ConsoleLogger.printLine(Level.SEVERE, "The program could not have execution rights due to insufficient permission to Afterburner");
         } catch (SecurityException e) {
             ConsoleLogger.printStacktrace(e, "Forcing failed !");
         }
-
 
         try {
             process = new ProcessBuilder()
@@ -448,11 +454,17 @@ public class AfterburnerApp {
                     .directory(new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString()))
                     .start();
 
+            Signal.handle(new Signal("INT"), sig -> {
+                this.killTask("Ordered by CLI");
+                System.exit(0);
+            });
+
             InputStream is = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             String line;
             int skip = 0;
+            if(!isDisplayOutput()) ConsoleLogger.printLine(Level.INFO, "The managed program is running. Type 'help' to list available commands");
             try {
                 while ((line = br.readLine()) != null) {
 
@@ -472,7 +484,10 @@ public class AfterburnerApp {
                             skip += value.getLineSkip();
                         }
                     }
-                    if(skip == 0) log.print().save();
+                    if(skip == 0) {
+                        if(isDisplayOutput()) log.print();
+                        log.save();
+                    }
                     else {
                         log.setSkip(true).save();
                         skip--;
@@ -513,6 +528,7 @@ public class AfterburnerApp {
             ConsoleLogger.printLine(Level.INFO, "Map saver disabled");
         }
         ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
+        System.exit(0);
     }
 
     public void killTask() {
@@ -622,6 +638,10 @@ public class AfterburnerApp {
         return commonFilesTypeManager;
     }
 
+    public Map<Class<? extends BaseCommonFile>, List<Object>> getActualCommonFilesLoaded() {
+        return new HashMap<>(this.commonFilesGeneral);
+    }
+
     public RunnableManager getRunnableManager() {
         return runnableManager;
     }
@@ -636,5 +656,13 @@ public class AfterburnerApp {
 
     public UUID getUniqueId() {
         return uniqueId;
+    }
+
+    public boolean isDisplayOutput() {
+        return displayOutput;
+    }
+
+    public void setDisplayOutput(boolean displayOutput) {
+        this.displayOutput = displayOutput;
     }
 }

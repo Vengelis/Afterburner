@@ -46,6 +46,8 @@ common-files:
     list: ['MySpigotPlugin']
   - name: "McWorlds"
     list: ['MyWorldName']
+  - name: "ServerFiles"
+    list: ['MyServerFile']
 
 # #============================================================#
 # |                      Exec settings                         |
