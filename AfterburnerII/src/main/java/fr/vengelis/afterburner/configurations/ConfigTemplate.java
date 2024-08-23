@@ -13,6 +13,7 @@ public enum ConfigTemplate {
     PATTERN_NAME(null),
     MAP_PICKER(new ArrayList<MapPicker>()),
     COMMON_FILES(new HashMap<Class<? extends BaseCommonFile>, List<Object>>()),
+    EXECUTABLE_TYPE(null),
     EXECUTABLE_MIN_RAM(null),
     EXECUTABLE_MAX_RAM(null),
     EXECUTABLE_NAME(null),

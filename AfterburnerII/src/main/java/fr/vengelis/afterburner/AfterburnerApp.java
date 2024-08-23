@@ -19,6 +19,9 @@ import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.logs.Skipper;
+import fr.vengelis.afterburner.mprocess.ManagedProcess;
+import fr.vengelis.afterburner.mprocess.argwrapper.ArgumentWrapperManager;
+import fr.vengelis.afterburner.mprocess.argwrapper.impl.JavaArguments;
 import fr.vengelis.afterburner.plugins.PluginManager;
 import fr.vengelis.afterburner.configurations.AsConfig;
 import fr.vengelis.afterburner.providers.IAfterburnerProvider;
@@ -60,10 +63,11 @@ public class AfterburnerApp {
     private final RedisTaskManager redisTaskManager = new RedisTaskManager();
     private final RunnableManager runnableManager = new RunnableManager();
     private final CliManager cliManager = new CliManager();
+    private final ArgumentWrapperManager argumentWrapperManager = new ArgumentWrapperManager();
 
     private boolean alreadyInit = false;
 
-    private Process process;
+    private ManagedProcess managedProcess;
     private final UUID uniqueId = UUID.randomUUID();
     private final Map<Class<? extends BaseCommonFile>, List<Object>> commonFilesGeneral = new HashMap<>();
     private int totalTimeRunning = 0;
@@ -107,6 +111,8 @@ public class AfterburnerApp {
         commonFilesTypeManager.register(McPlugins.class);
         commonFilesTypeManager.register(McWorlds.class);
         commonFilesTypeManager.register(ServerFiles.class);
+
+        argumentWrapperManager.register(new JavaArguments());
 
         providerManager.loadProviders(Afterburner.WORKING_AREA + File.separator + "providers");
         providerManager.getProviders().forEach((n, p) -> {
@@ -298,6 +304,7 @@ public class AfterburnerApp {
             }
 
             Map<String, Object> exec = (Map<String, Object>) data.get("executable");
+            ConfigTemplate.EXECUTABLE_TYPE.setData(exec.get("type"));
             ConfigTemplate.EXECUTABLE_MIN_RAM.setData(exec.get("min-ram"));
             ConfigTemplate.EXECUTABLE_MAX_RAM.setData(exec.get("max-ram"));
             ConfigTemplate.EXECUTABLE_NAME.setData(exec.get("exec"));
@@ -353,6 +360,7 @@ public class AfterburnerApp {
                         .forEach(redisTask -> redisTask.run(message));
             }));
         }
+
         eventManager.call(new InitializeEvent());
     }
 
@@ -431,86 +439,12 @@ public class AfterburnerApp {
     public void execute() {
         ConsoleLogger.printLine(Level.INFO, "Preparing executable");
 
-        StringBuilder stb = new StringBuilder();
-        stb.append(ConfigGeneral.PATH_JAVA.getData())
-                .append(" -Xms")
-                .append(ConfigTemplate.EXECUTABLE_MIN_RAM.getData())
-                .append(" -Xmx" + ConfigTemplate.EXECUTABLE_MAX_RAM.getData());
-        for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS.getData())) {
-            stb.append(" " + s);
-        }
-        stb.append(" -jar \"" + ConfigGeneral.PATH_RENDERING_DIRECTORY.getData() + File.separator + ConfigTemplate.EXECUTABLE_NAME.getData() + "\"")
-                .append(" DafterbunerUuid=" + uniqueId)
-                .append(" Djobid=" + providerManager.getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
-                .append(" DserverOwner=" + providerManager.getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
-
-        PreparedExecutableEvent event = new PreparedExecutableEvent(stb);
-        eventManager.call(event);
-
-        ConsoleLogger.printLine(Level.INFO, "Final built java command : " + event.getCmdline());
-
-        try {
-            ConsoleLogger.printLine(Level.INFO, "Forcing the program '" + ConfigTemplate.EXECUTABLE_NAME.getData() + "' into execution mode.");
-            File execFile = new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData() + "/" + ConfigTemplate.EXECUTABLE_NAME.getData());
-            if(execFile.setExecutable(true)) ConsoleLogger.printLine(Level.INFO, "Forcing success !");
-            else ConsoleLogger.printLine(Level.SEVERE, "The program could not have execution rights due to insufficient permission to Afterburner");
-        } catch (SecurityException e) {
-            ConsoleLogger.printStacktrace(e, "Forcing failed !");
+        managedProcess = new ManagedProcess(uniqueId);
+        if(!managedProcess.execute()) {
+            ConsoleLogger.printLine(Level.WARNING, "A problem occurred before or during server execution. Afterburner stopped.");
+            System.exit(1);
         }
 
-        try {
-            process = new ProcessBuilder()
-                    .command(Arrays.asList(event.getCmdline().toString().split(" ")))
-                    .directory(new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString()))
-                    .start();
-
-            Signal.handle(new Signal("INT"), sig -> {
-                this.killTask("Ordered by CLI");
-                System.exit(0);
-            });
-
-            InputStream is = process.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
-            String line;
-            int skip = 0;
-            if(!isDisplayOutput()) ConsoleLogger.printLine(Level.INFO, "The managed program is running. Type 'help' to list available commands");
-            try {
-                while ((line = br.readLine()) != null) {
-
-                    PrintedLog log = new PrintedLog(line);
-
-                    PrintedLogEvent event1 = new PrintedLogEvent(log, PrintedLogEvent.Handler.PROCESS);
-                    eventManager.call(event);
-                    if(event1.isCancelled()) {
-                        log.setSkip(true).save();
-                        continue;
-                    }
-
-                    for(Skipper value : logSkipperManager.getSkipperList()) {
-                        if(value.getPattern().matcher(line).find()) {
-                            if(value.isCast()) ConsoleLogger.printLine(Level.INFO, "Skipper trigger : " + log.getLine() + " (" + value.getLineSkip() + " lines ignored)");
-                            if(value.getAction() != null) value.getAction().accept(log.getLine());
-                            skip += value.getLineSkip();
-                        }
-                    }
-                    if(skip == 0) {
-                        if(isDisplayOutput()) log.print();
-                        log.save();
-                    }
-                    else {
-                        log.setSkip(true).save();
-                        skip--;
-                    }
-                }
-            } catch (IOException e) {
-                ConsoleLogger.printLine(Level.SEVERE, "Managed program was suddenly closed");
-            }
-
-
-        } catch (IOException e) {
-            ConsoleLogger.printStacktrace(e);
-        }
         eventManager.call(new PostExecutableEvent());
     }
 
@@ -550,24 +484,30 @@ public class AfterburnerApp {
         KillTaskEvent event = new KillTaskEvent(msg);
         eventManager.call(event);
         if(!event.isCancelled()) {
-            process.destroyForcibly();
-            ConsoleLogger.printLine(Level.WARNING, "Kill task received, shutting down managed process (Reason : " + message + ").");
-            if(event.isShutdownAfterburner()) {
-                ConsoleLogger.printLine(Level.WARNING, "Shutting down afterburner.");
-                System.exit(0);
+            if(managedProcess.getProcess().isPresent()) {
+                managedProcess.getProcess().get().destroyForcibly();
+                ConsoleLogger.printLine(Level.WARNING, "Kill task received, shutting down managed process (Reason : " + message + ").");
+                if(event.isShutdownAfterburner()) {
+                    ConsoleLogger.printLine(Level.WARNING, "Shutting down afterburner.");
+                    System.exit(0);
+                }
+            } else {
+                ConsoleLogger.printLine(Level.SEVERE, "Process is not started !");
             }
         }
     }
 
     public boolean sendCommandToProcess(String command) {
-        if (process != null && process.isAlive()) {
-            OutputStream outputStream = process.getOutputStream();
-            PrintWriter writer = new PrintWriter(outputStream, true);
-            writer.println(command);
-            writer.flush();
-            return true;
-        } else {
-            ConsoleLogger.printLine(Level.INFO, "The process is not running.");
+        if(managedProcess.getProcess().isPresent()) {
+            if (managedProcess.getProcess().get().isAlive()) {
+                OutputStream outputStream = managedProcess.getProcess().get().getOutputStream();
+                PrintWriter writer = new PrintWriter(outputStream, true);
+                writer.println(command);
+                writer.flush();
+                return true;
+            } else {
+                ConsoleLogger.printLine(Level.INFO, "The process is not running.");
+            }
         }
         return false;
     }
@@ -608,8 +548,8 @@ public class AfterburnerApp {
         return logSkipperManager;
     }
 
-    public Process getProcess() {
-        return process;
+    public ManagedProcess getProcess() {
+        return managedProcess;
     }
 
     public int getTotalTimeRunning() {
@@ -678,5 +618,13 @@ public class AfterburnerApp {
 
     public void setDisplayOutput(boolean displayOutput) {
         this.displayOutput = displayOutput;
+    }
+
+    public ArgumentWrapperManager getArgumentWrapperManager() {
+        return argumentWrapperManager;
+    }
+
+    public ManagedProcess getManagedProcess() {
+        return managedProcess;
     }
 }

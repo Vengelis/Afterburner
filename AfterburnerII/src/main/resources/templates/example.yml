@@ -56,6 +56,7 @@ common-files:
 #  must be entered as well as the name of the minecraft executable
 
 executable:
+  type: "java"
   min-ram: "1G"
   max-ram: "10G"
   exec: "spigot1.8.8.jar"
