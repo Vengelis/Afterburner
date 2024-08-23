@@ -41,7 +41,9 @@ public class CliManager {
                         .setAction(arg -> {
                             String cmd = String.join(" ", arg);
                             ConsoleLogger.printLine(Level.INFO, "Command sended > " + cmd);
-                            AfterburnerApp.get().sendCommandToProcess(cmd);
+                            if(!AfterburnerApp.get().sendCommandToProcess(cmd)) {
+                                ConsoleLogger.printLine(Level.SEVERE, "Command not sended !");
+                            }
                         })
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
