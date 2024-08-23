@@ -504,7 +504,7 @@ public class AfterburnerApp {
                     }
                 }
             } catch (IOException e) {
-                ConsoleLogger.printLine(Level.SEVERE, "MinecraftServer was suddenly closed");
+                ConsoleLogger.printLine(Level.SEVERE, "Managed program was suddenly closed");
             }
 
 
@@ -538,7 +538,6 @@ public class AfterburnerApp {
             ConsoleLogger.printLine(Level.INFO, "Map saver disabled");
         }
         ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
-        System.exit(0);
     }
 
     public void killTask() {
