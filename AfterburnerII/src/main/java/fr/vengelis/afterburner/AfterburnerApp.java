@@ -560,18 +560,15 @@ public class AfterburnerApp {
         }
     }
 
-    public boolean processSendCommand(String command) {
+    public boolean sendCommandToProcess(String command) {
         if (process != null && process.isAlive()) {
-            try (OutputStream outputStream = process.getOutputStream();
-                 PrintWriter writer = new PrintWriter(outputStream)) {
-                writer.println(command);
-                writer.flush();
-                return true;
-            } catch (IOException e) {
-                ConsoleLogger.printStacktrace(e);
-            }
+            OutputStream outputStream = process.getOutputStream();
+            PrintWriter writer = new PrintWriter(outputStream, true);
+            writer.println(command);
+            writer.flush();
+            return true;
         } else {
-            ConsoleLogger.printLine(Level.INFO, "Le processus n'est pas en cours d'exécution.");
+            ConsoleLogger.printLine(Level.INFO, "The process is not running.");
         }
         return false;
     }

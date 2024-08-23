@@ -5,6 +5,7 @@ import fr.vengelis.afterburner.cli.consumers.AtbCommandLister;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.events.impl.PrintedLogEvent;
 import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistoryInstruction;
+import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.ReprepareInstruction;
 import fr.vengelis.afterburner.logs.Skipper;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
@@ -34,6 +35,22 @@ public class CliManager {
                 .setName("instance")
                 .setDescription("Manage internal program instance.")
                 .addAlias("inst")
+                .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
+                        .setName("input")
+                        .setDescription("Send input command to managed program console.")
+                        .setAction(arg -> {
+                            String cmd = String.join(" ", arg);
+                            ConsoleLogger.printLine(Level.INFO, "Command sended > " + cmd);
+                            AfterburnerApp.get().sendCommandToProcess(cmd);
+                        })
+                        .build())
+                .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
+                        .setName("htop")
+                        .setDescription("Display consommation informations.")
+                        .setAction(arg -> {
+                            new GetAtbInfosInstruction().print();
+                        })
+                        .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
                         .setName("config")
                         .setDescription("Manage template configuration.")
