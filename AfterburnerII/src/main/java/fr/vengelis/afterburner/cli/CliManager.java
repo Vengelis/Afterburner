@@ -167,6 +167,7 @@ public class CliManager {
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                                 .setName("edit")
                                 .setDescription("Enable or disable common file - Command : atb cf edit <common file name> <setting> <true/false>")
+                                .requiresArgument()
                                 .setAction(arg -> {
                                     if(arg.length < 3) ConsoleLogger.printLine(Level.SEVERE, "Missing common file name and/or settings and/or data of setting");
                                     else {
