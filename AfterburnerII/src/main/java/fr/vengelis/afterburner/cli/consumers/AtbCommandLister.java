@@ -21,7 +21,7 @@ public class AtbCommandLister implements Consumer<String[]> {
 
     private void listCommands(AtbCommand command, String indent) {
         if(!command.getName().equalsIgnoreCase("root"))
-            ConsoleLogger.printLine(Level.INFO, indent + "- " + command.getName() + (command.getAliases().isEmpty() ? "" : "|" + String.join("|", command.getAliases())) + ": " + command.getDescription());
+            ConsoleLogger.printLine(Level.INFO, indent + " " + command.getName() + (command.getAliases().isEmpty() ? "" : "|" + String.join("|", command.getAliases())) + ": " + command.getDescription());
         else
             ConsoleLogger.printLine(Level.INFO, " HELP CENTER :");
         command.getSubCommands().values().forEach(subCommand -> listCommands(subCommand, indent + "  "));

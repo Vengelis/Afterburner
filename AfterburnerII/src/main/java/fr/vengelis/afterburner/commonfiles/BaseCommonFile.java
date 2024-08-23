@@ -6,6 +6,7 @@ public interface BaseCommonFile {
 
     String getName();
     boolean isEnabled();
+    void setEnabled(boolean value);
     void copy() throws IOException;
 
 }

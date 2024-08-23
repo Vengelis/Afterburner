@@ -1,7 +1,6 @@
 package fr.vengelis.afterburner;
 
 import fr.vengelis.afterburner.utils.ConsoleLogger;
-import sun.misc.Signal;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -81,7 +80,7 @@ public class Afterburner {
         new Thread(() -> {
             finalApp.exportRessources();
             finalApp.loadPluginsAndProviders();
-            finalApp.loadConfigs();
+            finalApp.loadGeneralConfigs();
             finalApp.initialize();
             finalApp.setReprepareEnabled(true);
             while (finalApp.isReprepareEnabled()) {

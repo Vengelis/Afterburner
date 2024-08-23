@@ -40,6 +40,7 @@ import sun.misc.Signal;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 public class AfterburnerApp {
@@ -130,7 +131,7 @@ public class AfterburnerApp {
         });
     }
 
-    public void loadConfigs() {
+    public void loadGeneralConfigs() {
         try {
             ConsoleLogger.printLine(Level.INFO, "Loading configurations");
 
@@ -213,12 +214,34 @@ public class AfterburnerApp {
                 commonFilesGeneral.put(fileTypes, cfl);
             }
 
-            // Template Config
+            loadTemplateConfig();
+
+            if(Afterburner.VERBOSE_PROVIDERS) {
+                for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
+                    ConsoleLogger.printLine(Level.CONFIG, "Verbose provider result : instruction : " + providerInstructions.name() + " - result : " + providerManager.getResultInstruction(providerInstructions));
+                }
+            }
+
+            if(!((boolean) ConfigGeneral.READY.getData())) {
+                ConsoleLogger.printLineBox(Level.CONFIG, "Afterburner marked not ready. Stopping load process.");
+                System.exit(0);
+            }
+
+            eventManager.call(new LoadEvent());
+        } catch (IOException e) {
+            ConsoleLogger.printStacktrace(new BrokenConfigException(e));
+            System.exit(1);
+        }
+    }
+
+    public void loadTemplateConfig() {
+        // Template Config
+        try {
             ConsoleLogger.printLine(Level.INFO, "Loading template configuration '" + getTemplateName() + "'");
-            config = new File(Afterburner.WORKING_AREA + File.separator + "templates" + File.separator + getTemplateName());
-            stm = new FileInputStream(config);
-            data.clear();
-            data = yaml.load(stm);
+            File config = new File(Afterburner.WORKING_AREA + File.separator + "templates" + File.separator + getTemplateName());
+            InputStream stm = new FileInputStream(config);
+            Yaml yaml = new Yaml();
+            Map<String, Object> data = yaml.load(stm);
 
             ConfigTemplate.CONFIG_VERSION.setData(data.get("config-version"));
             if(ConfigTemplate.CONFIG_VERSION.isDeprecated((int) ConfigTemplate.CONFIG_VERSION.getData())) {
@@ -295,19 +318,6 @@ public class AfterburnerApp {
                             .put(jsonObject.get("world-name").getAsString(), jsonObject.get("to-map-picker").getAsString());
                 }
             }
-
-            if(Afterburner.VERBOSE_PROVIDERS) {
-                for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
-                    ConsoleLogger.printLine(Level.CONFIG, "Verbose provider result : instruction : " + providerInstructions.name() + " - result : " + providerManager.getResultInstruction(providerInstructions));
-                }
-            }
-
-            if(!((boolean) ConfigGeneral.READY.getData())) {
-                ConsoleLogger.printLineBox(Level.CONFIG, "Afterburner marked not ready. Stopping load process.");
-                System.exit(0);
-            }
-
-            eventManager.call(new LoadEvent());
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(new BrokenConfigException(e));
             System.exit(1);
@@ -640,6 +650,14 @@ public class AfterburnerApp {
 
     public Map<Class<? extends BaseCommonFile>, List<Object>> getActualCommonFilesLoaded() {
         return new HashMap<>(this.commonFilesGeneral);
+    }
+
+    public Optional<BaseCommonFile> computeCommonFileWithName(String name) {
+        AtomicReference<BaseCommonFile> bcf = new AtomicReference<>(null);
+        AfterburnerApp.get().getActualCommonFilesLoaded().values().forEach(lo -> lo.forEach(cf -> {
+            if(((BaseCommonFile) cf).getName().equalsIgnoreCase(name)) bcf.set((BaseCommonFile) cf);
+        }));
+        return Optional.ofNullable(bcf.get());
     }
 
     public RunnableManager getRunnableManager() {
