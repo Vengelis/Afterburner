@@ -103,6 +103,7 @@ public class AfterburnerApp {
     private void preinit() {
         commonFilesTypeManager.init();
         argumentWrapperManager.init();
+        eventManager.call(new PreInitEvent());
     }
 
     public void loadPluginsAndProviders() {
