@@ -5,9 +5,6 @@ import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.cli.CliManager;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.commonfiles.CommonFilesTypeManager;
-import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McPlugins;
-import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McWorlds;
-import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.ServerFiles;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.configurations.ConfigTemplate;
 import fr.vengelis.afterburner.events.EventManager;
@@ -20,7 +17,6 @@ import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.mprocess.ManagedProcess;
 import fr.vengelis.afterburner.mprocess.argwrapper.ArgumentWrapperManager;
-import fr.vengelis.afterburner.mprocess.argwrapper.impl.JavaArguments;
 import fr.vengelis.afterburner.plugins.PluginManager;
 import fr.vengelis.afterburner.configurations.AsConfig;
 import fr.vengelis.afterburner.providers.IAfterburnerProvider;
@@ -104,14 +100,12 @@ public class AfterburnerApp {
         }
     }
 
+    private void preinit() {
+        commonFilesTypeManager.init();
+        argumentWrapperManager.init();
+    }
+
     public void loadPluginsAndProviders() {
-
-        commonFilesTypeManager.register(McPlugins.class);
-        commonFilesTypeManager.register(McWorlds.class);
-        commonFilesTypeManager.register(ServerFiles.class);
-
-        argumentWrapperManager.register(new JavaArguments());
-
         providerManager.loadProviders(Afterburner.WORKING_AREA + File.separator + "providers");
         providerManager.getProviders().forEach((n, p) -> {
             if(p instanceof AsConfig) {
@@ -133,6 +127,8 @@ public class AfterburnerApp {
                 ConsoleLogger.printStacktrace(e);
             }
         });
+
+        preinit();
     }
 
     public void loadGeneralConfigs() {
@@ -364,10 +360,10 @@ public class AfterburnerApp {
 
     public void preparing() {
         ConsoleLogger.printLine(Level.INFO, "Preparing");
-        PrePreparingEvent event = new PrePreparingEvent();
+        PreparingEvent event = new PreparingEvent(PreparingEvent.Stage.PRE);
         eventManager.call(event);
         if(!event.isCancelled()) {
-            if(!event.getSkipStep().contains(PrePreparingEvent.PreparingStep.CLEANING_RENDERING_FOLDER)) {
+            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.CLEANING_RENDERING_FOLDER)) {
                 ConsoleLogger.printLine(Level.INFO, "Cleaning rendering directory");
                 try {
                     FileUtils.cleanDirectory(new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString()));
@@ -375,7 +371,7 @@ public class AfterburnerApp {
                     ConsoleLogger.printStacktrace(e, "There was a problem cleaning the render folder");
                 }
             }
-            if(!event.getSkipStep().contains(PrePreparingEvent.PreparingStep.COPY_TEMPLATE)) {
+            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.COPY_TEMPLATE)) {
                 ConsoleLogger.printLine(Level.INFO, "Copying template into rendering directory");
                 try {
                     FileUtils.copyDirectory(
@@ -385,7 +381,7 @@ public class AfterburnerApp {
                     ConsoleLogger.printStacktrace(e, "There was a problem copying template to render folder");
                 }
             }
-            if(!event.getSkipStep().contains(PrePreparingEvent.PreparingStep.COPY_COMMON_FILES)) {
+            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.COPY_COMMON_FILES)) {
                 ConsoleLogger.printLine(Level.INFO, "Copying commons files into rendering directory");
                 Map<Class<? extends BaseCommonFile>, List<Object>> commonFilesData = (HashMap<Class<? extends BaseCommonFile>, List<Object>>) ConfigTemplate.COMMON_FILES.getData();
                 for(Class<? extends BaseCommonFile> type : commonFilesData.keySet()) {
@@ -406,7 +402,7 @@ public class AfterburnerApp {
                 }
             }
 
-            if(!event.getSkipStep().contains(PrePreparingEvent.PreparingStep.MAP_PICKER)) {
+            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.MAP_PICKER)) {
                 ConsoleLogger.printLine(Level.INFO, "Checking map picker");
                 for (ConfigTemplate.MapPicker picker : ((ArrayList<ConfigTemplate.MapPicker>) ConfigTemplate.MAP_PICKER.getData())) {
                     if(picker.isEnabled()) {
@@ -431,7 +427,7 @@ public class AfterburnerApp {
                 }
             }
         }
-        eventManager.call(new PostPreparingEvent());
+        eventManager.call(new PreparingEvent(PreparingEvent.Stage.POST));
     }
 
     public void execute() {
@@ -439,11 +435,11 @@ public class AfterburnerApp {
 
         managedProcess = new ManagedProcess(uniqueId);
         if(!managedProcess.execute()) {
-            ConsoleLogger.printLine(Level.WARNING, "A problem occurred before or during server execution. Afterburner stopped.");
+            ConsoleLogger.printLine(Level.WARNING, "A problem occurred before or during program execution. Afterburner forced to stop.");
             System.exit(1);
         }
 
-        eventManager.call(new PostExecutableEvent());
+        eventManager.call(new ExecutableEvent());
     }
 
     public void ending() {

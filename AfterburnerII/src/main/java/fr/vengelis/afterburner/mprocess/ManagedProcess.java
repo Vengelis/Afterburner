@@ -3,7 +3,7 @@ package fr.vengelis.afterburner.mprocess;
 import fr.vengelis.afterburner.AfterburnerApp;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.configurations.ConfigTemplate;
-import fr.vengelis.afterburner.events.impl.PreparedExecutableEvent;
+import fr.vengelis.afterburner.events.impl.ExecutableEvent;
 import fr.vengelis.afterburner.events.impl.PrintedLogEvent;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.logs.Skipper;
@@ -51,7 +51,7 @@ public class ManagedProcess {
                 .append(" Djobid=" + AfterburnerApp.get().getProviderManager().getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
                 .append(" DserverOwner=" + AfterburnerApp.get().getProviderManager().getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
 
-        PreparedExecutableEvent event = new PreparedExecutableEvent(stb);
+        ExecutableEvent event = new ExecutableEvent(stb);
         AfterburnerApp.get().getEventManager().call(event);
 
         ConsoleLogger.printLine(Level.INFO, "Final built java command : " + event.getCmdline());

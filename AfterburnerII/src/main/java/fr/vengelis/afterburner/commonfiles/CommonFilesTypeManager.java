@@ -1,5 +1,9 @@
 package fr.vengelis.afterburner.commonfiles;
 
+import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McPlugins;
+import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McWorlds;
+import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.ServerFiles;
+
 import java.util.*;
 
 /**
@@ -22,6 +26,15 @@ import java.util.*;
 public class CommonFilesTypeManager {
 
     private final List<Class<? extends BaseCommonFile>> commonFilesType = new ArrayList<>();
+    private boolean alreadyInit = false;
+
+    public void init() {
+        if(alreadyInit) return;
+        alreadyInit = true;
+        register(McPlugins.class);
+        register(McWorlds.class);
+        register(ServerFiles.class);
+    }
 
     /**
      * This method adds a new common file type to the 'commonFilesType' list.

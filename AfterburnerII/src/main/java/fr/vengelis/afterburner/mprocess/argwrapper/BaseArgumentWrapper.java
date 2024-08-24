@@ -7,12 +7,22 @@ import java.io.File;
 
 public abstract class BaseArgumentWrapper implements IArgWrapper{
 
+    private final boolean noRamArgs;
+
     public abstract String getType();
     public abstract String getBaseLauncher();
 
     protected abstract String getPrefixMinimalRam();
     protected abstract String getPrefixMaximumRam();
     protected abstract String getPrefixExecutable();
+
+    public BaseArgumentWrapper(boolean noRamArgs) {
+        this.noRamArgs = noRamArgs;
+    }
+
+    public boolean hasNoRamArgs() {
+        return noRamArgs;
+    }
 
     public String getFinalMinimalRam() {
         return getPrefixMinimalRam()+ ConfigTemplate.EXECUTABLE_MIN_RAM.getData();
@@ -23,7 +33,12 @@ public abstract class BaseArgumentWrapper implements IArgWrapper{
     }
 
     public String getFinalExecutable() {
-        return getPrefixExecutable() + " \"" + ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString() + File.separator + ConfigTemplate.EXECUTABLE_NAME.getData() + "\"";
+        return getPrefixExecutable() +
+                " \"" +
+                ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString() +
+                File.separator +
+                ConfigTemplate.EXECUTABLE_NAME.getData() +
+                "\"";
     }
 
 }

@@ -4,6 +4,11 @@ import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.mprocess.argwrapper.BaseArgumentWrapper;
 
 public class JavaArguments extends BaseArgumentWrapper {
+
+    public JavaArguments() {
+        super(false);
+    }
+
     @Override
     public String getType() {
         return "java";
