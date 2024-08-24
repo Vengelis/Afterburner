@@ -1,5 +1,6 @@
 package fr.vengelis.afterburner;
 
+import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.File;
@@ -65,6 +66,7 @@ public class Afterburner {
             System.exit(1);
         }
 
+        HandlerRecorder handlerRecorder = new HandlerRecorder();
         AfterburnerApp app = null;
 
         try {
@@ -79,8 +81,10 @@ public class Afterburner {
         AfterburnerApp finalApp = app;
         new Thread(() -> {
             finalApp.exportRessources();
+            handlerRecorder.executeSuperPreInit();
             finalApp.loadPluginsAndProviders();
             finalApp.loadGeneralConfigs();
+            handlerRecorder.executePreInit();
             finalApp.initialize();
             finalApp.setReprepareEnabled(true);
             while (finalApp.isReprepareEnabled()) {

@@ -4,22 +4,25 @@ import fr.vengelis.afterburner.AfterburnerApp;
 import fr.vengelis.afterburner.cli.consumers.AtbCommandLister;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.events.impl.PrintedLogEvent;
+import fr.vengelis.afterburner.handler.PreInitHandler;
 import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistoryInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.ReprepareInstruction;
 import fr.vengelis.afterburner.logs.Skipper;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
+import fr.vengelis.afterburner.handler.HandlerRecorder;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-public class CliManager {
+public class CliManager implements PreInitHandler {
 
     private final AtbCommand root;
 
     public CliManager() {
         this.root = new AtbCommand("root", "system", AtbCommand.State.CONTINIOUS);
+        HandlerRecorder.get().register(this);
     }
 
     public void init() {

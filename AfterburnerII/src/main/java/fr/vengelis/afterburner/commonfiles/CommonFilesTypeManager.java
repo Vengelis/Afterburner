@@ -3,6 +3,9 @@ package fr.vengelis.afterburner.commonfiles;
 import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McPlugins;
 import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McWorlds;
 import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.ServerFiles;
+import fr.vengelis.afterburner.handler.PreInitHandler;
+import fr.vengelis.afterburner.handler.HandlerRecorder;
+import fr.vengelis.afterburner.handler.SuperPreInitHandler;
 
 import java.util.*;
 
@@ -23,10 +26,14 @@ import java.util.*;
  *     <li>get(String className): This method returns a Class object from the 'commonFilesType' list that matches the provided class name. If no match is found, it returns null.</li>
  * </ul>
  */
-public class CommonFilesTypeManager {
+public class CommonFilesTypeManager implements SuperPreInitHandler {
 
     private final List<Class<? extends BaseCommonFile>> commonFilesType = new ArrayList<>();
     private boolean alreadyInit = false;
+
+    public CommonFilesTypeManager() {
+        HandlerRecorder.get().register(this);
+    }
 
     public void init() {
         if(alreadyInit) return;

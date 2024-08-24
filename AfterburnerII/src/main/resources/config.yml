@@ -41,7 +41,6 @@ paths:
 #  NOT IMPLEMENTED !!!
 
 query:
-  host: "127.0.0.1"
   port: 46798
   password: "strong-password"
 

@@ -13,6 +13,7 @@ import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.exceptions.ProviderUnknownInstructionException;
 import fr.vengelis.afterburner.exceptions.UnknownProviderException;
 import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
+import fr.vengelis.afterburner.interconnection.socket.SocketServer;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.mprocess.ManagedProcess;
@@ -58,6 +59,7 @@ public class AfterburnerApp {
     private final RunnableManager runnableManager = new RunnableManager();
     private final CliManager cliManager = new CliManager();
     private final ArgumentWrapperManager argumentWrapperManager = new ArgumentWrapperManager();
+    private final SocketServer socketServer = new SocketServer();
 
     private boolean alreadyInit = false;
 
@@ -75,8 +77,6 @@ public class AfterburnerApp {
         MACHINE_NAME = machineName;
         TEMPLATE = templateName;
         displayOutput = defaultDisplayProgramOutput;
-
-        cliManager.init();
     }
 
     public void exportRessources() {
@@ -98,12 +98,6 @@ public class AfterburnerApp {
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(e);
         }
-    }
-
-    private void preinit() {
-        commonFilesTypeManager.init();
-        argumentWrapperManager.init();
-        eventManager.call(new PreInitEvent());
     }
 
     public void loadPluginsAndProviders() {
@@ -128,8 +122,6 @@ public class AfterburnerApp {
                 ConsoleLogger.printStacktrace(e);
             }
         });
-
-        preinit();
     }
 
     public void loadGeneralConfigs() {
@@ -331,6 +323,8 @@ public class AfterburnerApp {
         alreadyInit = true;
 
         ConsoleLogger.printLine(Level.INFO, "Initializing");
+
+
 
         if((boolean) ConfigGeneral.REDIS_ENABLED.getData()) {
             RedisConnection.create();
