@@ -120,4 +120,21 @@ public class ManagedProcess {
         return Optional.ofNullable(process);
     }
 
+    public boolean sendCommandToProcess(String command) {
+        if(process != null) {
+            if (process.isAlive()) {
+                OutputStream outputStream = process.getOutputStream();
+                PrintWriter writer = new PrintWriter(outputStream, true);
+                writer.println(command);
+                writer.flush();
+                return true;
+            } else {
+                ConsoleLogger.printLine(Level.INFO, "The process is not running.");
+            }
+        } else {
+            ConsoleLogger.printLine(Level.INFO, "The process is not running.");
+        }
+        return false;
+    }
+
 }

@@ -18,7 +18,6 @@ import fr.vengelis.afterburner.exceptions.UnknownProviderException;
 import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
-import fr.vengelis.afterburner.logs.Skipper;
 import fr.vengelis.afterburner.mprocess.ManagedProcess;
 import fr.vengelis.afterburner.mprocess.argwrapper.ArgumentWrapperManager;
 import fr.vengelis.afterburner.mprocess.argwrapper.impl.JavaArguments;
@@ -39,7 +38,6 @@ import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.ResourceExporter;
 import org.apache.commons.io.FileUtils;
 import org.yaml.snakeyaml.Yaml;
-import sun.misc.Signal;
 
 import java.io.*;
 import java.util.*;
@@ -497,21 +495,6 @@ public class AfterburnerApp {
         }
     }
 
-    public boolean sendCommandToProcess(String command) {
-        if(managedProcess.getProcess().isPresent()) {
-            if (managedProcess.getProcess().get().isAlive()) {
-                OutputStream outputStream = managedProcess.getProcess().get().getOutputStream();
-                PrintWriter writer = new PrintWriter(outputStream, true);
-                writer.println(command);
-                writer.flush();
-                return true;
-            } else {
-                ConsoleLogger.printLine(Level.INFO, "The process is not running.");
-            }
-        }
-        return false;
-    }
-
     public static AfterburnerApp get() {
         return instance;
     }
@@ -548,7 +531,7 @@ public class AfterburnerApp {
         return logSkipperManager;
     }
 
-    public ManagedProcess getProcess() {
+    public ManagedProcess getManagedProcess() {
         return managedProcess;
     }
 
@@ -622,9 +605,5 @@ public class AfterburnerApp {
 
     public ArgumentWrapperManager getArgumentWrapperManager() {
         return argumentWrapperManager;
-    }
-
-    public ManagedProcess getManagedProcess() {
-        return managedProcess;
     }
 }
