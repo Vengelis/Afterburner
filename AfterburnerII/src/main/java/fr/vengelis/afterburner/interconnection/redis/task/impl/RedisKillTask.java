@@ -1,7 +1,7 @@
-package fr.vengelis.afterburner.redis.task.impl;
+package fr.vengelis.afterburner.interconnection.redis.task.impl;
 
 import fr.vengelis.afterburner.interconnection.instructions.impl.KillTaskIntruction;
-import fr.vengelis.afterburner.redis.task.AbstractRedisTask;
+import fr.vengelis.afterburner.interconnection.redis.task.AbstractRedisTask;
 
 public class RedisKillTask extends AbstractRedisTask {
 

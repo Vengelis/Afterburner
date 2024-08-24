@@ -1,9 +1,9 @@
-package fr.vengelis.afterburner.redis.task.impl;
+package fr.vengelis.afterburner.interconnection.redis.task.impl;
 
 import com.google.gson.Gson;
 import fr.vengelis.afterburner.AfterburnerApp;
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
-import fr.vengelis.afterburner.redis.task.AbstractRedisTask;
+import fr.vengelis.afterburner.interconnection.redis.task.AbstractRedisTask;
 
 public class RedisAfterburnerInfoTask extends AbstractRedisTask {
 

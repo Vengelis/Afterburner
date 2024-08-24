@@ -1,7 +1,7 @@
 package fr.vengelis.afterburner.events.impl;
 
 import fr.vengelis.afterburner.events.AbstractEvent;
-import fr.vengelis.afterburner.redis.task.AbstractRedisTask;
+import fr.vengelis.afterburner.interconnection.redis.task.AbstractRedisTask;
 
 import java.util.ArrayList;
 import java.util.List;

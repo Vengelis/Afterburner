@@ -1,7 +1,7 @@
-package fr.vengelis.afterburner.redis.task.impl;
+package fr.vengelis.afterburner.interconnection.redis.task.impl;
 
 import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistoryInstruction;
-import fr.vengelis.afterburner.redis.task.AbstractRedisTask;
+import fr.vengelis.afterburner.interconnection.redis.task.AbstractRedisTask;
 
 public class RedisCleanLogHistory extends AbstractRedisTask {
 

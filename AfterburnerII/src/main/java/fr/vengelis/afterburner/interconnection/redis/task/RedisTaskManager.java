@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.redis.task;
+package fr.vengelis.afterburner.interconnection.redis.task;
 
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 

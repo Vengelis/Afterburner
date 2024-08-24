@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.redis;
+package fr.vengelis.afterburner.interconnection.redis;
 
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import redis.clients.jedis.Jedis;

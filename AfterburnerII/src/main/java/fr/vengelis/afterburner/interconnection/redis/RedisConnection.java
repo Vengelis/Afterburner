@@ -1,23 +1,15 @@
-package fr.vengelis.afterburner.redis;
+package fr.vengelis.afterburner.interconnection.redis;
 
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
-import fr.vengelis.afterburner.utils.ConsoleLogger;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.yaml.snakeyaml.Yaml;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.params.ScanParams;
 import redis.clients.jedis.resps.ScanResult;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 public class RedisConnection {
 
