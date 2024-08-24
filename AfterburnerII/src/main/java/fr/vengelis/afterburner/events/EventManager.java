@@ -6,11 +6,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 public class EventManager {
-    private Map<Class<? extends AbstractEvent>, Map<EventPriority, List<Listener>>> eventListeners;
-
-    public EventManager() {
-        eventListeners = new HashMap<>();
-    }
+    private final Map<Class<? extends AbstractEvent>, Map<EventPriority, List<Listener>>> eventListeners = new HashMap<>();
 
     public void register(Listener listener) {
         Arrays.stream(listener.getClass().getDeclaredMethods())
