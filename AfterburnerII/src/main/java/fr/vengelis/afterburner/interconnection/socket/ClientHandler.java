@@ -1,5 +1,10 @@
 package fr.vengelis.afterburner.interconnection.socket;
 
+import fr.vengelis.afterburner.AfterburnerApp;
+import fr.vengelis.afterburner.cli.command.CommandInstruction;
+import fr.vengelis.afterburner.configurations.ConfigGeneral;
+import fr.vengelis.afterburner.utils.ConsoleLogger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,7 +59,11 @@ public class ClientHandler implements Runnable {
                         break;
                     } else {
                         System.out.println("Received from " + clientId + ": " + inputLine);
-                        out.println("Echo: " + inputLine);
+                        if(inputLine.trim().isEmpty()) {
+                            AfterburnerApp.get().getCliManager().getRootCommand().execute(new CommandInstruction(inputLine, new String[0]));
+                        } else {
+                            out.println("Echo: No command entered. Please try again.");
+                        }
                     }
                 }
             } catch (SocketException e) {
@@ -62,7 +71,7 @@ public class ClientHandler implements Runnable {
                 disconnected = true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            ConsoleLogger.printStacktrace(e);
         } finally {
             closeConnection();
             server.removeClient(clientId);
@@ -70,7 +79,7 @@ public class ClientHandler implements Runnable {
     }
 
     private boolean verifyPassword(String hashedPassword) {
-        String correctHashedPassword = hashPassword("correct_password", clientId.toString());
+        String correctHashedPassword = hashPassword((String) ConfigGeneral.QUERY_PASSWORD.getData(), clientId.toString());
         return correctHashedPassword.equals(hashedPassword);
     }
 
@@ -95,7 +104,7 @@ public class ClientHandler implements Runnable {
             if (out != null) out.close();
             if (clientSocket != null) clientSocket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            ConsoleLogger.printStacktrace(e);
         }
     }
 

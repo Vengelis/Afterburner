@@ -13,6 +13,7 @@ import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.exceptions.ProviderUnknownInstructionException;
 import fr.vengelis.afterburner.exceptions.UnknownProviderException;
 import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
+import fr.vengelis.afterburner.interconnection.socket.SocketClient;
 import fr.vengelis.afterburner.interconnection.socket.SocketServer;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
@@ -59,7 +60,6 @@ public class AfterburnerApp {
     private final RunnableManager runnableManager = new RunnableManager();
     private final CliManager cliManager = new CliManager();
     private final ArgumentWrapperManager argumentWrapperManager = new ArgumentWrapperManager();
-    private final SocketServer socketServer = new SocketServer();
 
     private boolean alreadyInit = false;
 
@@ -71,6 +71,8 @@ public class AfterburnerApp {
     private int repreparedCount = 0;
     private final LinkedList<PrintedLog> logHistory = new LinkedList<>();
     private boolean displayOutput;
+    private SocketServer socketServer;
+    private SocketClient socketClient;
 
     public AfterburnerApp(String machineName, String templateName, boolean defaultDisplayProgramOutput) {
         instance = this;
@@ -150,7 +152,6 @@ public class AfterburnerApp {
             ConfigGeneral.PATH_JAVA.setData(paths.get("java").toString().replace("<space>", " "));
 
             Map<String, Object> query = (Map<String, Object>) data.get("query");
-            ConfigGeneral.QUERY_HOST.setData(query.get("host"));
             ConfigGeneral.QUERY_PORT.setData(query.get("port"));
             ConfigGeneral.QUERY_PASSWORD.setData(query.get("password"));
 
@@ -321,10 +322,15 @@ public class AfterburnerApp {
     public void initialize() {
         if(alreadyInit) return;
         alreadyInit = true;
-
         ConsoleLogger.printLine(Level.INFO, "Initializing");
 
-
+//        socketClient = new SocketClient("localhost", (Integer) ConfigGeneral.QUERY_PORT.getData());
+//        try {
+//            socketClient.start();
+//        } catch (IOException e) {
+//            if(socketServer != null) socketServer.stop();
+//            ConsoleLogger.printStacktrace(e, "Query server console was not initialized. The service has therefore been stopped.");
+//        }
 
         if((boolean) ConfigGeneral.REDIS_ENABLED.getData()) {
             RedisConnection.create();
@@ -463,27 +469,39 @@ public class AfterburnerApp {
         ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
     }
 
-    public void killTask() {
-        this.killTask("Reason not specified");
+    public boolean killTask() {
+        return this.killTask("Reason not specified");
     }
 
-    public void killTask(String message) {
+    public boolean killTask(String message) {
+        return this.killTask(message, true);
+    }
+
+    public boolean killTask(String message, Boolean waitingProcess) {
         JsonObject msg = new JsonObject();
         msg.addProperty("message", message);
         KillTaskEvent event = new KillTaskEvent(msg);
         eventManager.call(event);
         if(!event.isCancelled()) {
             if(managedProcess.getProcess().isPresent()) {
-                managedProcess.getProcess().get().destroyForcibly();
+
+                if(waitingProcess) {
+                    ConsoleLogger.printLine(Level.INFO, "Shutting down with wainting process");
+                    managedProcess.sendCommandToProcess("stop");
+                } else {
+                    managedProcess.getProcess().get().destroyForcibly();
+                }
                 ConsoleLogger.printLine(Level.WARNING, "Kill task received, shutting down managed process (Reason : " + message + ").");
                 if(event.isShutdownAfterburner()) {
                     ConsoleLogger.printLine(Level.WARNING, "Shutting down afterburner.");
                     System.exit(0);
                 }
+                return true;
             } else {
                 ConsoleLogger.printLine(Level.SEVERE, "Process is not started !");
             }
         }
+        return false;
     }
 
     public static AfterburnerApp get() {
@@ -596,5 +614,17 @@ public class AfterburnerApp {
 
     public ArgumentWrapperManager getArgumentWrapperManager() {
         return argumentWrapperManager;
+    }
+
+    public void setSocketServer(SocketServer s) {
+        if(socketServer == null) socketServer = s;
+    }
+
+    public SocketServer getSocketServer() {
+        return socketServer;
+    }
+
+    public SocketClient getSocketClient() {
+        return socketClient;
     }
 }

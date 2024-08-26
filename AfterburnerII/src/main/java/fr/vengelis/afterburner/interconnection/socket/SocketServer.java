@@ -1,8 +1,10 @@
 package fr.vengelis.afterburner.interconnection.socket;
 
+import fr.vengelis.afterburner.AfterburnerApp;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.handler.PreInitHandler;
+import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,9 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SocketServer implements PreInitHandler {
     private int port;
     private final ConcurrentHashMap<UUID, ClientHandler> clients = new ConcurrentHashMap<>();
+    private boolean running = true;
 
     public SocketServer() {
         HandlerRecorder.get().register(this);
+        AfterburnerApp.get().setSocketServer(this);
     }
 
     public void init() {
@@ -28,7 +32,7 @@ public class SocketServer implements PreInitHandler {
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on port " + port);
-            while (true) {
+            while (running) {
                 Socket clientSocket = serverSocket.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 UUID clientId = UUID.fromString(in.readLine());
@@ -38,7 +42,7 @@ public class SocketServer implements PreInitHandler {
                 System.out.println("Client connected: " + clientId);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            ConsoleLogger.printStacktrace(e);
         }
     }
 
@@ -59,5 +63,10 @@ public class SocketServer implements PreInitHandler {
             clientHandler.closeConnection();
             removeClient(clientId);
         }
+    }
+
+    public void stop() {
+        clients.forEach((id, c) -> forceDisconnectClient(id));
+        running = false;
     }
 }

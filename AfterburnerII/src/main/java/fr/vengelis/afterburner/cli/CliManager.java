@@ -1,7 +1,9 @@
 package fr.vengelis.afterburner.cli;
 
 import fr.vengelis.afterburner.AfterburnerApp;
-import fr.vengelis.afterburner.cli.consumers.AtbCommandLister;
+import fr.vengelis.afterburner.cli.command.AtbCommand;
+import fr.vengelis.afterburner.cli.command.AtbCommandLister;
+import fr.vengelis.afterburner.cli.command.CommandInstruction;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.events.impl.PrintedLogEvent;
 import fr.vengelis.afterburner.handler.PreInitHandler;
@@ -12,6 +14,7 @@ import fr.vengelis.afterburner.logs.Skipper;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 
+import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -24,6 +27,7 @@ public class CliManager implements PreInitHandler {
         this.root = new AtbCommand("root", "system", AtbCommand.State.CONTINIOUS);
         HandlerRecorder.get().register(this);
     }
+
 
     public void init() {
         AtbCommandLister commandLister = new AtbCommandLister(this.root);
@@ -42,11 +46,13 @@ public class CliManager implements PreInitHandler {
                         .setName("input")
                         .setDescription("Send input command to managed program console.")
                         .setAction(arg -> {
-                            String cmd = String.join(" ", arg);
-                            ConsoleLogger.printLine(Level.INFO, "Command sended > " + cmd);
-                            if(!AfterburnerApp.get().getManagedProcess().sendCommandToProcess(cmd)) {
-                                ConsoleLogger.printLine(Level.SEVERE, "Command not sended !");
-                            }
+                            String cmd = String.join(" ", arg.getArgs());
+                            boolean execRtn = AfterburnerApp.get().getManagedProcess().sendCommandToProcess(cmd);
+                            return new AtbCommand.ExecutionResult<>(
+                                    execRtn,
+                                    "Sending input [" + (execRtn ? "successful" : "interrupted") + "] > " + cmd
+                            );
+
                         })
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
@@ -54,6 +60,10 @@ public class CliManager implements PreInitHandler {
                         .setDescription("Display consommation informations.")
                         .setAction(arg -> {
                             new GetAtbInfosInstruction().print();
+
+                            // TODO : A completer
+                            return new AtbCommand.ExecutionResult<>(true,
+                                    "");
                         })
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
@@ -66,7 +76,10 @@ public class CliManager implements PreInitHandler {
                                 .addAlias("r")
                                 .setAction(arg -> {
                                     AfterburnerApp.get().loadTemplateConfig();
-                                    ConsoleLogger.printLine(Level.INFO, "Template configuration was reloaded !");
+                                    return new AtbCommand.ExecutionResult<>(
+                                            true,
+                                            "Template configuration was reloaded !"
+                                    );
                                 })
                                 .build())
                         .build())
@@ -80,6 +93,10 @@ public class CliManager implements PreInitHandler {
                                     boolean ns = !AfterburnerApp.get().isDisplayOutput();
                                     ConsoleLogger.printLine(Level.INFO, "Real-Time log viewing : " + ns);
                                     AfterburnerApp.get().setDisplayOutput(ns);
+
+                                    // TODO : A completer
+                                    return new AtbCommand.ExecutionResult<>(true,
+                                            "");
                                 })
                                 .build())
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
@@ -92,7 +109,8 @@ public class CliManager implements PreInitHandler {
                                         .addAlias("c", "cl")
                                         .setAction(arg -> {
                                             new CleanLogHistoryInstruction().execute();
-                                            ConsoleLogger.printLine(Level.INFO, "Log history was cleared !");
+                                            return new AtbCommand.ExecutionResult<>(true,
+                                                    "Log history was cleared !");
                                         })
                                         .build())
                                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
@@ -100,7 +118,7 @@ public class CliManager implements PreInitHandler {
                                         .setDescription("Display current logs (add '--show-skipped-line|-ssl' for view all lines)")
                                         .setAction(arg -> {
 
-                                            boolean disableSkipper = isFinalDisableSkipper(arg);
+                                            boolean disableSkipper = isFinalDisableSkipper(arg.getArgs());
                                             AtomicInteger skip = new AtomicInteger();
 
                                             AfterburnerApp.get().getLogHistory().forEach(log -> {
@@ -127,6 +145,10 @@ public class CliManager implements PreInitHandler {
                                                     skip.getAndDecrement();
                                                 }
                                             });
+
+                                            // TODO : A completer
+                                            return new AtbCommand.ExecutionResult<>(true,
+                                                    "");
                                         })
                                         .build())
                                 .build())
@@ -135,10 +157,16 @@ public class CliManager implements PreInitHandler {
                         .setName("kill")
                         .setDescription("Kill current process instance.")
                         .setAction(arg -> {
+                            boolean rtn;
                             if(arg == null) {
-                                AfterburnerApp.get().killTask("No reason was specified in CLI");
+                                rtn = AfterburnerApp.get().killTask("No reason was specified in CLI");
+                                return new AtbCommand.ExecutionResult<>(rtn,
+                                        "No reason was specified in CLI");
                             } else {
-                                AfterburnerApp.get().killTask(String.join(" ", arg));
+                                String stg = String.join(" ", arg.getArgs());
+                                rtn = AfterburnerApp.get().killTask(stg);
+                                return new AtbCommand.ExecutionResult<>(rtn,
+                                        stg);
                             }
                         })
                         .build())
@@ -157,16 +185,20 @@ public class CliManager implements PreInitHandler {
                                 .setDescription("Show all commons files")
                                 .addAlias("list", "s")
                                 .setAction(arg -> {
+                                    LinkedList<String> rtn = new LinkedList<>();
                                     AfterburnerApp.get().getActualCommonFilesLoaded().forEach((cf, cflist) -> {
-                                        if(cflist.isEmpty()) ConsoleLogger.printLine(Level.INFO, "Common file list of type '" + cf.getSimpleName() + "' is empty");
-                                        else {
-                                            ConsoleLogger.printLine(Level.INFO, "Common file list of type '" + cf.getSimpleName() + "' :");
+                                        if(cflist.isEmpty()) {
+                                            rtn.add("Common file list of type '" + cf.getSimpleName() + "' is empty");
+                                        } else {
+                                            rtn.add("Common file list of type '" + cf.getSimpleName() + "' :");
                                             for (Object cfa : cflist) {
                                                 BaseCommonFile icfa = (BaseCommonFile) cfa;
-                                                ConsoleLogger.printLine(Level.INFO, "   - " + icfa.getName() + " (Enabled : " + icfa.isEnabled() + ")");
+                                                rtn.add("   - " + icfa.getName() + " (Enabled : " + icfa.isEnabled() + ")");
                                             }
                                         }
                                     });
+                                    return new AtbCommand.ExecutionResult<>(true,
+                                            rtn);
                                 })
                                 .build())
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
@@ -174,20 +206,27 @@ public class CliManager implements PreInitHandler {
                                 .setDescription("Enable or disable common file - Command : atb cf edit <common file name> <setting> <true/false>")
                                 .requiresArgument()
                                 .setAction(arg -> {
-                                    if(arg.length < 3) ConsoleLogger.printLine(Level.SEVERE, "Missing common file name and/or settings and/or data of setting");
+                                    if(arg.getArgs().length < 3)
+                                        return new AtbCommand.ExecutionResult<>(false,
+                                                "Missing common file name and/or settings and/or data of setting");
                                     else {
-                                        String cfn = arg[0];
-                                        String setting = arg[1];
-                                        String settingdata = arg[2];
+                                        String cfn = arg.getArgs()[0];
+                                        String setting = arg.getArgs()[1];
+                                        String settingdata = arg.getArgs()[2];
                                         Optional<BaseCommonFile> cfnr = AfterburnerApp.get().computeCommonFileWithName(cfn);
                                         if(cfnr.isPresent()) {
                                             if(setting.equalsIgnoreCase("enabled")) {
                                                 boolean v = Boolean.parseBoolean(settingdata);
                                                 cfnr.get().setEnabled(v);
-                                                ConsoleLogger.printLine(Level.INFO, "Setting '" + setting + "' for common file '" + cfn + "' changed to '" + v + "'");
+                                                return new AtbCommand.ExecutionResult<>(true,
+                                                        "Setting '" + setting + "' for common file '" + cfn + "' changed to '" + v + "'");
+                                            } else {
+                                                return new AtbCommand.ExecutionResult<>(false,
+                                                        "setting " + setting + " not available/found !");
                                             }
                                         } else {
-                                            ConsoleLogger.printLine(Level.SEVERE, "Unknown common file '" + cfn + "'");
+                                            return new AtbCommand.ExecutionResult<>(false,
+                                                    "Unknown common file '" + cfn + "'");
                                         }
                                     }
                                 })
@@ -199,7 +238,9 @@ public class CliManager implements PreInitHandler {
                         .addAlias("rep")
                         .requiresArgument()
                         .setAction(arg -> {
-                            new ReprepareInstruction(String.join(" ", arg)).execute();
+                            boolean rtn = new ReprepareInstruction(String.join(" ", arg.getArgs())).execute();
+                            return new AtbCommand.ExecutionResult<>(rtn,
+                                    rtn);
                         })
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
@@ -211,23 +252,35 @@ public class CliManager implements PreInitHandler {
                                 .setDescription("List plugins informations")
                                 .addAlias("is")
                                 .setAction(args -> {
-                                    ConsoleLogger.printLine(Level.INFO, "Plugins : ");
+                                    LinkedList<String> rtn = new LinkedList<>();
+                                    rtn.add("Plugins : ");
                                     AfterburnerApp.get().getPluginManager().getPlugins().forEach((pn, p) -> {
-                                        ConsoleLogger.printLine(Level.INFO, " - " + pn);
+                                        rtn.add(" - " + pn);
                                     });
+                                    return new AtbCommand.ExecutionResult<>(true,
+                                            rtn);
                                 })
                                 .build())
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                         .setName("shutdown")
-                        .setDescription("Shutdown afterburner immediatly.")
+                        .setDescription("Shutdown afterburner immediately.")
                         .addAlias("sh")
                         .setAction(arg -> {
-                            String reason = String.join(" ", arg);
+                            String reason = String.join(" ", arg.getArgs());
+                            boolean wp = true;
                             if(reason.isEmpty()) reason = "Ordered by CLI without reason";
-                            AfterburnerApp.get().killTask(reason);
-                            ConsoleLogger.printLine(Level.INFO, "Good by :D");
-                            System.exit(0);
+                            else if(arg.getArgs().length > 0) {
+                                String a = arg.getArgs()[0];
+                                if(a.equalsIgnoreCase("--skip-end-process") ||
+                                        a.equalsIgnoreCase("-sep") ||
+                                        a.equalsIgnoreCase("-s"))
+                                    wp = false;
+                            }
+                            AfterburnerApp.get().killTask(reason, wp);
+                            AfterburnerApp.get().setReprepareEnabled(false);
+                            return new AtbCommand.ExecutionResult<>(true,
+                                    "Good by :D");
                         })
                         .build())
                 .build());
@@ -236,10 +289,10 @@ public class CliManager implements PreInitHandler {
 
     private static boolean isFinalDisableSkipper(String[] arg) {
         boolean disableSkipper = false;
-        if(arg.length != 0) {
-            for (String a : arg) {
-                if(a.equalsIgnoreCase("--show-skipped-line") || a.equalsIgnoreCase("-ssl"))
-                    disableSkipper = true;
+        for (String a : arg) {
+            if (a.equalsIgnoreCase("--show-skipped-line") || a.equalsIgnoreCase("-ssl")) {
+                disableSkipper = true;
+                break;
             }
         }
         return disableSkipper;
@@ -250,6 +303,7 @@ public class CliManager implements PreInitHandler {
     }
 
     public void execute(String input) {
-        this.root.execute(input.split(" "));
+        CommandInstruction instruction = new CommandInstruction(input, input.split("\\s+"));
+        this.root.execute(instruction);
     }
 }

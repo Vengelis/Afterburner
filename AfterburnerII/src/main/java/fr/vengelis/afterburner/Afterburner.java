@@ -1,5 +1,7 @@
 package fr.vengelis.afterburner;
 
+import fr.vengelis.afterburner.cli.command.CommandInstruction;
+import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
@@ -102,13 +104,15 @@ public class Afterburner {
 
         }).start();
 
+
+        // TODO : A retirer dès l'implémentation du ServerClient de faite
         Scanner keyboard = new Scanner(System.in);
         String input;
 
         while(true) {
             input = keyboard.nextLine();
             if(input != null && !input.trim().isEmpty()) {
-                app.getCliManager().getRootCommand().execute(input.split("\\s+"));
+                CommandResultReader.read(app.getCliManager().getRootCommand().execute(new CommandInstruction(input, input.split("\\s+"))));
             } else {
                 ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
             }

@@ -1,5 +1,7 @@
 package fr.vengelis.afterburner.interconnection.socket;
 
+import fr.vengelis.afterburner.configurations.ConfigGeneral;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,7 +34,7 @@ public class SocketClient {
 
         out.println(clientId.toString());
 
-        String password = "correct_password";
+        String password = (String) ConfigGeneral.QUERY_PASSWORD.getData();
         String hashedPassword = hashPassword(password, clientId.toString());
         System.out.println("'" + hashedPassword + "'");
         out.println(hashedPassword);
@@ -50,7 +52,7 @@ public class SocketClient {
             while (true) {
                 System.out.print("Enter message: ");
                 message = scanner.nextLine();
-                sendMessage(message);
+                sendCommand(message);
                 if (message.equalsIgnoreCase("disconnect")) {
                     break;
                 }
@@ -88,8 +90,8 @@ public class SocketClient {
         }
     }
 
-    public void sendMessage(String message) {
-        out.println(message);
+    public void sendCommand(String command) {
+        out.println(command);
     }
 
     public void stop() throws IOException {

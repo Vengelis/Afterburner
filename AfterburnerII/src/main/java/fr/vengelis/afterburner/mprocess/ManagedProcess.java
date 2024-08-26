@@ -98,6 +98,7 @@ public class ManagedProcess {
                         }
                     }
                     if(skip == 0) {
+                        // TODO : Rendre compatible avec l'envoie de la data aux sockets clients
                         if(AfterburnerApp.get().isDisplayOutput()) log.print();
                         log.save();
                     }
