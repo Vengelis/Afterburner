@@ -1,14 +1,18 @@
 package fr.vengelis.afterburner;
 
+import fr.vengelis.afterburner.cli.command.AtbCommand;
 import fr.vengelis.afterburner.cli.command.CommandInstruction;
 import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.logging.Level;
 
@@ -20,6 +24,7 @@ public class Afterburner {
     private static boolean DEFAULT_DISPLAY_PROGRAM_OUTPUT = true;
 
     public static void main(String[] args) {
+
         ConsoleLogger.printLine(Level.INFO, "#-------------------------------------------------------------------------------------------------------------------------#");
         ConsoleLogger.printLine(Level.INFO, "|     _       __   _                   _                                                                                  |");
         ConsoleLogger.printLine(Level.INFO, "|    / \\     / _| | |_    ___   _ __  | |__    _   _   _ __   _ __     ___   _ __                                         |");
@@ -27,7 +32,7 @@ public class Afterburner {
         ConsoleLogger.printLine(Level.INFO, "|  / ___ \\  |  _| | |_  |  __/ | |    | |_) | | |_| | | |    | | | | |  __/ | |                                           |");
         ConsoleLogger.printLine(Level.INFO, "| /_/   \\_\\ |_|    \\__|  \\___| |_|    |_.__/   \\__,_| |_|    |_| |_|  \\___| |_|                                           |");
         ConsoleLogger.printLine(Level.INFO, "|                                                                                                                         |");
-        ConsoleLogger.printLine(Level.INFO, "|                                                                                          By Vengelis_  - v4.3.0         |");
+        ConsoleLogger.printLine(Level.INFO, "|                                                                                       By Vengelis_  - " + getVersion());
         ConsoleLogger.printLine(Level.INFO, "#-------------------------------------------------------------------------------------------------------------------------#");
 
         String startupCommand = System.getProperty("sun.java.command");
@@ -104,18 +109,34 @@ public class Afterburner {
 
         }).start();
 
-
-        // TODO : A retirer dès l'implémentation du ServerClient de faite
         Scanner keyboard = new Scanner(System.in);
         String input;
 
-        while(true) {
-            input = keyboard.nextLine();
-            if(input != null && !input.trim().isEmpty()) {
-                CommandResultReader.read(app.getCliManager().getRootCommand().execute(new CommandInstruction(input, input.split("\\s+"))));
-            } else {
-                ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
+        while (true) {
+            AfterburnerApp appi = AfterburnerApp.get();
+            if (appi != null && appi.getSocketClient() != null) {
+                input = keyboard.nextLine();
+                if (input != null && !input.trim().isEmpty()) {
+                    CommandResultReader.read(app.getCliManager().getRootCommand().execute(new CommandInstruction(input, input.split("\\s+"), AtbCommand.CommandSide.SERVER)));
+                } else {
+                    ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
+                }
             }
+        }
+    }
+
+    public static String getVersion() {
+        Properties properties = new Properties();
+        try (InputStream input = Afterburner.class.getClassLoader().getResourceAsStream("version.properties")) {
+            if (input == null) {
+                System.out.println("Sorry, unable to find version.properties");
+                return null;
+            }
+            properties.load(input);
+            return properties.getProperty("version");
+        } catch (IOException e) {
+            ConsoleLogger.printStacktrace(e);
+            return null;
         }
     }
 }

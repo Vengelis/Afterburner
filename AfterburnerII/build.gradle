@@ -3,8 +3,10 @@ plugins {
     id 'application'
 }
 
+apply from: 'version.gradle'
+
 group = "fr.vengelis"
-version = ""
+version = loadVersion().getVersion()
 mainClassName = 'fr.vengelis.afterburner.Afterburner'
 
 repositories {
@@ -30,10 +32,10 @@ compileJava {
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
     manifest {
-        attributes["Main-Class"] = "fr.vengelis.afterburner.Afterburner"
+        attributes["Main-Class"] = mainClassName
     }
 }
 
 application {
-    getMainClass().set("fr.vengelis.afterburner.Afterburner")
+    getMainClass().set(mainClassName)
 }
