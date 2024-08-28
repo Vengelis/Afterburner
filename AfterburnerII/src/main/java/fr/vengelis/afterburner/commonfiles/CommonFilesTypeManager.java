@@ -3,7 +3,6 @@ package fr.vengelis.afterburner.commonfiles;
 import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McPlugins;
 import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.McWorlds;
 import fr.vengelis.afterburner.commonfiles.impl.minecraftserver.ServerFiles;
-import fr.vengelis.afterburner.handler.PreInitHandler;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.handler.SuperPreInitHandler;
 

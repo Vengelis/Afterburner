@@ -1,7 +1,9 @@
-package fr.vengelis.afterburner.interconnection.socket;
+package fr.vengelis.afterburner.interconnection.socket.system;
 
-import fr.vengelis.afterburner.AfterburnerApp;
-import fr.vengelis.afterburner.cli.command.CommandInstruction;
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
+import fr.vengelis.afterburner.cli.command.AtbCommand;
+import fr.vengelis.afterburner.cli.command.CommandResult;
+import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
@@ -14,6 +16,7 @@ import java.net.SocketException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ClientHandler implements Runnable {
     private UUID clientId;
@@ -57,17 +60,30 @@ public class ClientHandler implements Runnable {
                         out.println("Server: disconnect");
                         closeConnection();
                         break;
-                    } else {
-                        System.out.println("Received from " + clientId + ": " + inputLine);
-                        if(inputLine.trim().isEmpty()) {
-                            AfterburnerApp.get().getCliManager().getRootCommand().execute(new CommandInstruction(inputLine, new String[0]));
+                    }
+
+                    /*
+                    // Explicitement utile pour l'application cliente
+                    else if(inputLine.startsWith("Server:EchoLog:")) {
+                        String msg = inputLine.replace("Server:EchoLog:", "");
+                        PrintedLog log = PrintedLog.deserialize(msg);
+                        ConsoleLogger.printLine(Level.INFO, "SocketEmbarkedClient Receive Log : [" + log.getLevel().getName() + "] " + log.getLine());
+                    }
+                    */
+                    else {
+                        if(inputLine.startsWith("Server:EchoLog:")) continue;
+                        ConsoleLogger.printLine(Level.INFO, "[SocketServer] Received from " + clientId + ": " + inputLine);
+                        if(!inputLine.trim().isEmpty()) {
+                            CommandResult<?> rtn = AfterburnerSlaveApp.get().getCliManager().execute(inputLine, AtbCommand.CommandSide.SERVER);
+                            CommandResultReader.read(rtn);
+//                            AfterburnerApp.get().getSocketServer().sendAllClient("Echo: " + rtn.serialize());
                         } else {
                             out.println("Echo: No command entered. Please try again.");
                         }
                     }
                 }
             } catch (SocketException e) {
-                System.out.println("Client disconnected: " + clientId);
+                ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId);
                 disconnected = true;
             }
         } catch (IOException e) {
@@ -99,16 +115,21 @@ public class ClientHandler implements Runnable {
     }
 
     public void closeConnection() {
-        try {
-            if (in != null) in.close();
-            if (out != null) out.close();
-            if (clientSocket != null) clientSocket.close();
-        } catch (IOException e) {
-            ConsoleLogger.printStacktrace(e);
-        }
+        out.println("Server:RequireClientDisconnect");
+//        try {
+//            if (in != null) in.close();
+//            if (out != null) out.close();
+//            if (clientSocket != null) clientSocket.close();
+//        } catch (IOException e) {
+//            ConsoleLogger.printStacktrace(e);
+//        }
     }
 
     public boolean isDisconnected() {
         return disconnected;
+    }
+
+    public void sendMessage(String message) {
+        out.println(message);
     }
 }

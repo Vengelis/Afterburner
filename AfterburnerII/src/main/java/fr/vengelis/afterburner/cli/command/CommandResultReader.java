@@ -4,7 +4,6 @@ import fr.vengelis.afterburner.cli.command.printer.IConsolePrinter;
 import fr.vengelis.afterburner.cli.command.printer.ConsolePrinterFactory;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
-import java.util.ArrayDeque;
 import java.util.logging.Level;
 
 public class CommandResultReader {
@@ -21,13 +20,6 @@ public class CommandResultReader {
         } else {
             ConsoleLogger.printLine(Level.WARNING, "No response data to print.");
         }
-
-//        // TODO : A mieux implémenter
-//        if(result.getCommandSide().equals(AtbCommand.CommandSide.SERVER)) {
-//            // TODO : Print dans la console et renvoyer la commande au client
-//        } else {
-//            // TODO : Print le resultat renvoyé par le serveur
-//        }
     }
 
 }

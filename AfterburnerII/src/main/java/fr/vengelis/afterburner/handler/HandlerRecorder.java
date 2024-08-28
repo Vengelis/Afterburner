@@ -1,6 +1,8 @@
 package fr.vengelis.afterburner.handler;
 
-import fr.vengelis.afterburner.AfterburnerApp;
+import fr.vengelis.afterburner.Afterburner;
+import fr.vengelis.afterburner.AfterburnerClientApp;
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.events.impl.PreInitEvent;
 
 import java.util.ArrayList;
@@ -30,7 +32,10 @@ public class HandlerRecorder {
 
     public void executePreInit() {
         initHandlers.forEach(PreInitHandler::init);
-        AfterburnerApp.get().getEventManager().call(new PreInitEvent());
+        if(Afterburner.getLaunchType().equals(Afterburner.LaunchType.SLAVE))
+            AfterburnerSlaveApp.get().getEventManager().call(new PreInitEvent());
+        else if(Afterburner.getLaunchType().equals(Afterburner.LaunchType.CONSOLE_PANEL))
+            AfterburnerClientApp.get().getEventManager().call(new PreInitEvent());
     }
 
     public static HandlerRecorder get() {

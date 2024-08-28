@@ -1,24 +1,21 @@
 package fr.vengelis.afterburner.interconnection.instructions.impl;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import fr.vengelis.afterburner.AfterburnerApp;
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.events.impl.RequestGetInfosEvent;
 import fr.vengelis.afterburner.events.impl.ReturnGetInfosEvent;
 import fr.vengelis.afterburner.interconnection.instructions.BaseCommunicationInstruction;
-import fr.vengelis.afterburner.logs.Skipper;
 import fr.vengelis.afterburner.providers.ProviderInstructions;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.util.stream.Collectors;
 
 public class GetAtbInfosInstruction extends BaseCommunicationInstruction<JsonObject> {
 
     @Override
     public JsonObject execute() {
         RequestGetInfosEvent event2 = new RequestGetInfosEvent();
-        AfterburnerApp.get().getEventManager().call(event2);
+        AfterburnerSlaveApp.get().getEventManager().call(event2);
         if(event2.isCancelled()) return new JsonObject();
 
         JsonObject afterburnerInfo = new JsonObject();
@@ -26,9 +23,9 @@ public class GetAtbInfosInstruction extends BaseCommunicationInstruction<JsonObj
         // REQUEST
         JsonObject requestInfos = new JsonObject();
         for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
-            requestInfos.addProperty(providerInstructions.name(), AfterburnerApp.get().getProviderManager().getResultInstruction(providerInstructions).toString());
+            requestInfos.addProperty(providerInstructions.name(), AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(providerInstructions).toString());
         }
-        requestInfos.addProperty("machineName", AfterburnerApp.get().getMachineName());
+        requestInfos.addProperty("machineName", AfterburnerSlaveApp.get().getMachineName());
         afterburnerInfo.add("request", requestInfos);
 
         // RESOURCES
@@ -59,13 +56,13 @@ public class GetAtbInfosInstruction extends BaseCommunicationInstruction<JsonObj
 
         // RUNNING
         JsonObject runningInfos = new JsonObject();
-        runningInfos.addProperty("total", AfterburnerApp.get().getTotalTimeRunning());  // false - TODO : Fonction absolument pas faite
+        runningInfos.addProperty("total", AfterburnerSlaveApp.get().getTotalTimeRunning());  // false - TODO : Fonction absolument pas faite
         afterburnerInfo.add("running", runningInfos);
 
         // REPREPARED
         JsonObject repreparedInfos = new JsonObject();
-        repreparedInfos.addProperty("enabled", AfterburnerApp.get().isReprepareEnabled());
-        repreparedInfos.addProperty("count", AfterburnerApp.get().getRepreparedCount());
+        repreparedInfos.addProperty("enabled", AfterburnerSlaveApp.get().isReprepareEnabled());
+        repreparedInfos.addProperty("count", AfterburnerSlaveApp.get().getRepreparedCount());
         afterburnerInfo.add("reprepared", repreparedInfos);
 
         // LOGS
@@ -75,7 +72,7 @@ public class GetAtbInfosInstruction extends BaseCommunicationInstruction<JsonObj
 //        afterburnerInfo.add("logs", logsInfos);
 
         ReturnGetInfosEvent event3 = new ReturnGetInfosEvent(afterburnerInfo);
-        AfterburnerApp.get().getEventManager().call(event3);
+        AfterburnerSlaveApp.get().getEventManager().call(event3);
         if(event3.isCancelled()) return new JsonObject();
         return event3.getDatas();
     }

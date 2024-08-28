@@ -80,9 +80,14 @@ public class PluginManager {
         if (!plugins.containsKey(atbPluginAnnotation.name())) {
             if(AbstractATBPlugin.class.isAssignableFrom(loadedClass)) {
                 try {
-                    AbstractATBPlugin pluginInstance = (AbstractATBPlugin) loadedClass.newInstance();
-                    plugins.put(atbPluginAnnotation.name(), pluginInstance);
-                    ConsoleLogger.printLine(Level.INFO, " - " + atbPluginAnnotation.name() + " finded");
+                    if(atbPluginAnnotation.launchType().equals(Afterburner.getLaunchType())) {
+                        AbstractATBPlugin pluginInstance = (AbstractATBPlugin) loadedClass.newInstance();
+                        plugins.put(atbPluginAnnotation.name(), pluginInstance);
+                        ConsoleLogger.printLine(Level.INFO, " - " + atbPluginAnnotation.name() + " finded");
+                    } else {
+                        ConsoleLogger.printLine(Level.INFO, " - " + atbPluginAnnotation.name() + " skipped (LaunchType is different from AApp)");
+                    }
+
                 } catch (InstantiationException | IllegalAccessException e) {
                     ConsoleLogger.printStacktrace(e);
                 }

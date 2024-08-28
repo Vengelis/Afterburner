@@ -10,19 +10,13 @@ import fr.vengelis.afterburner.configurations.ConfigTemplate;
 import fr.vengelis.afterburner.events.EventManager;
 import fr.vengelis.afterburner.events.impl.*;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
-import fr.vengelis.afterburner.exceptions.ProviderUnknownInstructionException;
-import fr.vengelis.afterburner.exceptions.UnknownProviderException;
 import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
-import fr.vengelis.afterburner.interconnection.socket.SocketClient;
-import fr.vengelis.afterburner.interconnection.socket.SocketServer;
+import fr.vengelis.afterburner.interconnection.socket.system.SocketServer;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.mprocess.ManagedProcess;
 import fr.vengelis.afterburner.mprocess.argwrapper.ArgumentWrapperManager;
 import fr.vengelis.afterburner.plugins.PluginManager;
-import fr.vengelis.afterburner.configurations.AsConfig;
-import fr.vengelis.afterburner.providers.IAfterburnerProvider;
-import fr.vengelis.afterburner.providers.ProviderInstructions;
 import fr.vengelis.afterburner.providers.ProviderManager;
 import fr.vengelis.afterburner.interconnection.redis.PubSubAPI;
 import fr.vengelis.afterburner.interconnection.redis.RedisConnection;
@@ -42,9 +36,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
-public class AfterburnerApp {
+public class AfterburnerSlaveApp implements AApp {
 
-    private static AfterburnerApp instance;
+    private static AfterburnerSlaveApp instance;
     private final String MACHINE_NAME;
     private final String TEMPLATE;
 
@@ -60,6 +54,7 @@ public class AfterburnerApp {
     private final RunnableManager runnableManager = new RunnableManager();
     private final CliManager cliManager = new CliManager();
     private final ArgumentWrapperManager argumentWrapperManager = new ArgumentWrapperManager();
+    private final SocketServer socketServer = new SocketServer();
 
     private boolean alreadyInit = false;
 
@@ -71,128 +66,49 @@ public class AfterburnerApp {
     private int repreparedCount = 0;
     private final LinkedList<PrintedLog> logHistory = new LinkedList<>();
     private boolean displayOutput;
-    private SocketServer socketServer;
-    private SocketClient socketClient;
 
-    public AfterburnerApp(String machineName, String templateName, boolean defaultDisplayProgramOutput) {
+    public AfterburnerSlaveApp(String machineName, String templateName, boolean defaultDisplayProgramOutput) {
         instance = this;
         MACHINE_NAME = machineName;
         TEMPLATE = templateName;
         displayOutput = defaultDisplayProgramOutput;
     }
 
+    @Override
     public void exportRessources() {
         ConsoleLogger.printLine(Level.INFO, "Exporting configurations ...");
         try {
-            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/config.yml", false);
-
-            exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "commonfiles");
-            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/mcplugins.yml", false);
-            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/mcworlds.yml", false);
-            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/commonfiles/serverfiles.yml", false);
-
+            AfterburnerAppCommon.exportRessources(this);
             exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "templates");
             if(!Afterburner.DISABLE_TEST_TEMPLATE) exporter.saveResource(new File(Afterburner.WORKING_AREA), "/templates/example.yml", false);
-
-            exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "plugins");
-
-            exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "providers");
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(e);
+            System.exit(1);
         }
     }
 
+    @Override
     public void loadPluginsAndProviders() {
-        providerManager.loadProviders(Afterburner.WORKING_AREA + File.separator + "providers");
-        providerManager.getProviders().forEach((n, p) -> {
-            if(p instanceof AsConfig) {
-                try {
-                    ConsoleLogger.printLine(Level.INFO, "Loading '" + n + "' provider configuration");
-                    ((AsConfig) p).loadConfig();
-                } catch (Exception e) {
-                    ConsoleLogger.printStacktrace(e);
-                }
-            }
-        });
-
-        pluginManager.loadPlugins(Afterburner.WORKING_AREA + File.separator + "plugins");
-        pluginManager.getPlugins().forEach((n, p) -> {
-            ConsoleLogger.printLine(Level.INFO, "Loading plugin '" + n + "'");
-            try {
-                p.onLoad();
-            } catch (Exception e) {
-                ConsoleLogger.printStacktrace(e);
-            }
-        });
+        AfterburnerAppCommon.loadProviderAndPlugin(this);
     }
 
+    @Override
     public void loadGeneralConfigs() {
+        ConsoleLogger.printLine(Level.INFO, "Loading configurations");
+
+        AfterburnerAppCommon.loadGeneralConfig(this);
+
         try {
-            ConsoleLogger.printLine(Level.INFO, "Loading configurations");
-
-            // General Config
-            File config = new File(Afterburner.WORKING_AREA + File.separator + "config.yml");
-            Yaml yaml = new Yaml();
-            InputStream stm = new FileInputStream(config);
-
-            Map<String, Object> data = yaml.load(stm);
-            ConfigGeneral.CONFIG_VERSION.setData(data.get("config-version"));
-            if(ConfigGeneral.CONFIG_VERSION.isDeprecated((int) ConfigGeneral.CONFIG_VERSION.getData())) {
-                ConsoleLogger.printLineBox(Level.SEVERE, "config.yml was not updated. Please update your config version !");
-                System.exit(1);
-            }
-
-            ConfigGeneral.READY.setData(data.get("ready"));
-
-            Map<String, Object> paths = (Map<String, Object>) data.get("paths");
-            ConfigGeneral.PATH_RENDERING_DIRECTORY.setData(paths.get("rendering-directory").toString().replace("<space>", " "));
-            ConfigGeneral.PATH_TEMPLATE.setData(paths.get("templates").toString().replace("<space>", " "));
-            ConfigGeneral.PATH_WORLDS_BATCHED.setData(paths.get("worlds-batched").toString().replace("<space>", " "));
-            ConfigGeneral.PATH_COMMON_FILES.setData(paths.get("common-files").toString().replace("<space>", " "));
-            ConfigGeneral.PATH_JAVA.setData(paths.get("java").toString().replace("<space>", " "));
-
-            Map<String, Object> query = (Map<String, Object>) data.get("query");
-            ConfigGeneral.QUERY_PORT.setData(query.get("port"));
-            ConfigGeneral.QUERY_PASSWORD.setData(query.get("password"));
-
-            Map<String, Object> redis = (Map<String, Object>) data.get("redis");
-            ConfigGeneral.REDIS_ENABLED.setData(redis.get("enabled"));
-            ConfigGeneral.REDIS_HOST.setData(redis.get("host"));
-            ConfigGeneral.REDIS_PORT.setData(redis.get("port"));
-            ConfigGeneral.REDIS_USER.setData(redis.get("user"));
-            ConfigGeneral.REDIS_PASSWORD.setData(redis.get("password"));
-            ConfigGeneral.REDIS_DATABASE.setData(redis.get("database"));
-
-            List<Object> listProviders = (List<Object>) data.get("provider");
-            ((HashMap<ProviderInstructions, IAfterburnerProvider>) ConfigGeneral.PROVIDERS.getData()).clear();
-            for(Object provider : listProviders) {
-                JsonObject jo = new Gson().fromJson(provider.toString(), JsonObject.class);
-                ProviderInstructions providerInstructions = null;
-                try {
-                    providerInstructions = ProviderInstructions.valueOf(jo.get("instruction").getAsString().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    ConsoleLogger.printStacktrace(new ProviderUnknownInstructionException(e));
-                    System.exit(1);
-                }
-
-                IAfterburnerProvider provider1 = providerManager.getProvider(jo.get("system").getAsString().toUpperCase());
-                if(provider1 == null) {
-                    ConsoleLogger.printStacktrace(new UnknownProviderException(jo.get("system").getAsString().toUpperCase()));
-                    System.exit(1);
-                }
-                ((HashMap<ProviderInstructions, IAfterburnerProvider>) ConfigGeneral.PROVIDERS.getData()).put(providerInstructions, provider1);
-            }
-
-
             // Common Files
             ConsoleLogger.printLine(Level.INFO, "Checking common files");
             commonFilesGeneral.clear();
             for (Class<? extends BaseCommonFile> fileTypes : this.commonFilesTypeManager.get()) {
                 ConsoleLogger.printLine(Level.INFO, " - CFM : " + fileTypes.getSimpleName());
-                config = new File(Afterburner.WORKING_AREA + File.separator + "commonfiles" + File.separator + fileTypes.getSimpleName().toLowerCase() + ".yml");
-                stm = new FileInputStream(config);
-                data.clear();
-                data = yaml.load(stm);
+
+                File config = new File(Afterburner.WORKING_AREA + File.separator + "commonfiles" + File.separator + fileTypes.getSimpleName().toLowerCase() + ".yml");
+                InputStream stm = new FileInputStream(config);
+                Yaml yaml = new Yaml();
+                Map<String, Object> data = yaml.load(stm);
 
                 List<Object> cfl = new ArrayList();
                 List<Object> filesType = (List<Object>) data.get(fileTypes.getSimpleName().toLowerCase());
@@ -207,25 +123,11 @@ public class AfterburnerApp {
                 }
                 commonFilesGeneral.put(fileTypes, cfl);
             }
-
-            loadTemplateConfig();
-
-            if(Afterburner.VERBOSE_PROVIDERS) {
-                for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
-                    ConsoleLogger.printLine(Level.CONFIG, "Verbose provider result : instruction : " + providerInstructions.name() + " - result : " + providerManager.getResultInstruction(providerInstructions));
-                }
-            }
-
-            if(!((boolean) ConfigGeneral.READY.getData())) {
-                ConsoleLogger.printLineBox(Level.CONFIG, "Afterburner marked not ready. Stopping load process.");
-                System.exit(0);
-            }
-
-            eventManager.call(new LoadEvent());
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(new BrokenConfigException(e));
             System.exit(1);
         }
+        loadTemplateConfig();
     }
 
     public void loadTemplateConfig() {
@@ -319,18 +221,11 @@ public class AfterburnerApp {
         }
     }
 
+    @Override
     public void initialize() {
         if(alreadyInit) return;
         alreadyInit = true;
         ConsoleLogger.printLine(Level.INFO, "Initializing");
-
-//        socketClient = new SocketClient("localhost", (Integer) ConfigGeneral.QUERY_PORT.getData());
-//        try {
-//            socketClient.start();
-//        } catch (IOException e) {
-//            if(socketServer != null) socketServer.stop();
-//            ConsoleLogger.printStacktrace(e, "Query server console was not initialized. The service has therefore been stopped.");
-//        }
 
         if((boolean) ConfigGeneral.REDIS_ENABLED.getData()) {
             RedisConnection.create();
@@ -359,6 +254,7 @@ public class AfterburnerApp {
         eventManager.call(new InitializeEvent());
     }
 
+    @Override
     public void preparing() {
         ConsoleLogger.printLine(Level.INFO, "Preparing");
         PreparingEvent event = new PreparingEvent(PreparingEvent.Stage.PRE);
@@ -431,6 +327,7 @@ public class AfterburnerApp {
         eventManager.call(new PreparingEvent(PreparingEvent.Stage.POST));
     }
 
+    @Override
     public void execute() {
         ConsoleLogger.printLine(Level.INFO, "Preparing executable");
 
@@ -443,6 +340,7 @@ public class AfterburnerApp {
         eventManager.call(new ExecutableEvent());
     }
 
+    @Override
     public void ending() {
         eventManager.call(new EndEvent());
         if((boolean) ConfigTemplate.SAVE_ENABLED.getData()) {
@@ -494,6 +392,7 @@ public class AfterburnerApp {
                 ConsoleLogger.printLine(Level.WARNING, "Kill task received, shutting down managed process (Reason : " + message + ").");
                 if(event.isShutdownAfterburner()) {
                     ConsoleLogger.printLine(Level.WARNING, "Shutting down afterburner.");
+                    socketServer.stop();
                     System.exit(0);
                 }
                 return true;
@@ -504,7 +403,7 @@ public class AfterburnerApp {
         return false;
     }
 
-    public static AfterburnerApp get() {
+    public static AfterburnerSlaveApp get() {
         return instance;
     }
 
@@ -516,18 +415,22 @@ public class AfterburnerApp {
         return TEMPLATE;
     }
 
+    @Override
     public EventManager getEventManager() {
         return eventManager;
     }
 
+    @Override
     public ProviderManager getProviderManager() {
         return providerManager;
     }
 
+    @Override
     public PluginManager getPluginManager() {
         return pluginManager;
     }
 
+    @Override
     public ResourceExporter getExporter() {
         return exporter;
     }
@@ -582,12 +485,13 @@ public class AfterburnerApp {
 
     public Optional<BaseCommonFile> computeCommonFileWithName(String name) {
         AtomicReference<BaseCommonFile> bcf = new AtomicReference<>(null);
-        AfterburnerApp.get().getActualCommonFilesLoaded().values().forEach(lo -> lo.forEach(cf -> {
+        AfterburnerSlaveApp.get().getActualCommonFilesLoaded().values().forEach(lo -> lo.forEach(cf -> {
             if(((BaseCommonFile) cf).getName().equalsIgnoreCase(name)) bcf.set((BaseCommonFile) cf);
         }));
         return Optional.ofNullable(bcf.get());
     }
 
+    @Override
     public RunnableManager getRunnableManager() {
         return runnableManager;
     }
@@ -596,6 +500,7 @@ public class AfterburnerApp {
         return redisTaskManager;
     }
 
+    @Override
     public CliManager getCliManager() {
         return cliManager;
     }
@@ -616,15 +521,8 @@ public class AfterburnerApp {
         return argumentWrapperManager;
     }
 
-    public void setSocketServer(SocketServer s) {
-        if(socketServer == null) socketServer = s;
-    }
-
     public SocketServer getSocketServer() {
         return socketServer;
     }
 
-    public SocketClient getSocketClient() {
-        return socketClient;
-    }
 }

@@ -1,12 +1,17 @@
 package fr.vengelis.afterburner.cli.command;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class CommandResult<T> {
 
+    private static final Gson gson = new GsonBuilder().create();
+
+    private final CommandInstruction instruction;
     private final ResponseType type;
-    private final AtbCommand.CommandSide commandSide;
     private final AtbCommand.ExecutionResult<T> responseData;
     private final List<CommandResult<?>> combinedResults = new ArrayList<>();
 
@@ -24,18 +29,14 @@ public class CommandResult<T> {
         ;
     }
 
-    public CommandResult(ResponseType type, AtbCommand.CommandSide commandSide, AtbCommand.ExecutionResult<T> responseMessage) {
+    public CommandResult(CommandInstruction instruction, ResponseType type, AtbCommand.ExecutionResult<T> responseData) {
+        this.instruction = instruction;
         this.type = type;
-        this.commandSide = commandSide;
-        this.responseData = responseMessage;
+        this.responseData = responseData;
     }
 
     public ResponseType getType() {
         return type;
-    }
-
-    public AtbCommand.CommandSide getCommandSide() {
-        return commandSide;
     }
 
     public AtbCommand.ExecutionResult<T> getExecutionResult() {
@@ -52,5 +53,21 @@ public class CommandResult<T> {
 
     public void addCombinedResult(CommandResult<?> result) {
         combinedResults.add(result);
+    }
+
+    public CommandInstruction getInstruction() {
+        return instruction;
+    }
+
+    public AtbCommand.ExecutionResult<T> getResponseData() {
+        return responseData;
+    }
+
+    public String serialize() {
+        return gson.toJson(this);
+    }
+
+    public static <T> CommandResult<T> deserialize(String json, Class<T> clazz) {
+        return gson.fromJson(json, CommandResult.class);
     }
 }

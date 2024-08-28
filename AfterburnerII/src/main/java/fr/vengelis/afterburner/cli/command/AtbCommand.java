@@ -11,11 +11,11 @@ public class AtbCommand {
     private final String name;
     private final String description;
     private Map<String, AtbCommand> subCommands = new HashMap<>();
-    private Function<CommandInstruction, ExecutionResult<?>> action;
+    private Function<CommandInstruction, ExecutionResult<?>> actionServer;
+    private Function<CommandInstruction, ExecutionResult<?>> actionClient;
     private final State commandeState;
     private Set<String> aliases = new HashSet<>();
     private boolean requiresArgument = false;
-    private CommandSide commandSide = CommandSide.SERVER;
 
     public enum CommandSide {
         CLIENT,
@@ -51,11 +51,11 @@ public class AtbCommand {
         private String name;
         private String description;
         private AtbCommand.State commandeState;
-        private Function<CommandInstruction, ExecutionResult<?>> action;
+        private Function<CommandInstruction, ExecutionResult<?>> actionServer;
+        private Function<CommandInstruction, ExecutionResult<?>> actionClient;
         private Set<String> aliases = new HashSet<>();
         private Map<String, AtbCommand> subCommands = new HashMap<>();
         private boolean requiresArgument = false;
-        private CommandSide commandSide = CommandSide.SERVER;
 
         public AtbCommandBuilder(State commandeState) {
             this.commandeState = commandeState;
@@ -76,8 +76,13 @@ public class AtbCommand {
             return this;
         }
 
-        public AtbCommandBuilder setAction(Function<CommandInstruction, ExecutionResult<?>> action) {
-            this.action = action;
+        public AtbCommandBuilder setActionServer(Function<CommandInstruction, ExecutionResult<?>> actionServer) {
+            this.actionServer = actionServer;
+            return this;
+        }
+
+        public AtbCommandBuilder setActionClient(Function<CommandInstruction, ExecutionResult<?>> actionClient) {
+            this.actionClient = actionClient;
             return this;
         }
 
@@ -96,18 +101,13 @@ public class AtbCommand {
             return this;
         }
 
-        public AtbCommandBuilder isClientSide() {
-            this.commandSide = CommandSide.CLIENT;
-            return this;
-        }
-
         public AtbCommand build() {
             AtbCommand command = new AtbCommand(name, description, commandeState);
-            command.setAction(action);
+            command.setActionServer(actionServer);
+            command.setActionClient(actionClient);
             aliases.forEach(command::addAlias);
             subCommands.values().forEach(command::addSubCommand);
             command.setRequiresArgument(this.requiresArgument);
-            command.setCommandSide(commandSide);
             return command;
         }
     }
@@ -126,8 +126,12 @@ public class AtbCommand {
         return subCommands;
     }
 
-    public void setAction(Function<CommandInstruction, ExecutionResult<?>> action) {
-        this.action = action;
+    public void setActionServer(Function<CommandInstruction, ExecutionResult<?>> actionServer) {
+        this.actionServer = actionServer;
+    }
+
+    public void setActionClient(Function<CommandInstruction, ExecutionResult<?>> actionClient) {
+        this.actionClient = actionClient;
     }
 
     public String getName() {
@@ -167,32 +171,39 @@ public class AtbCommand {
         if (requiresArgument && (instruction.getArgs() == null || instruction.getArgs().length == 0)) {
             String rtn = "Error: This command requires an argument.";
             ConsoleLogger.printLine(Level.SEVERE, rtn);
-            return new CommandResult<>(CommandResult.ResponseType.ERROR, commandSide, new ExecutionResult<>(false, "Error: This command requires an argument."));
+            return new CommandResult<>(
+                    instruction,
+                    CommandResult.ResponseType.ERROR,
+                    new ExecutionResult<>(false, "Error: This command requires an argument.")
+            );
         }
 
+        Function<CommandInstruction, ExecutionResult<?>> action =
+                instruction.getSide() == CommandSide.CLIENT ? actionClient : actionServer;
+
         if (commandeState.equals(State.FINAL)) {
-            if (this.action != null) {
-                ExecutionResult<?> rtn = this.action.apply(instruction);
+            if (action != null) {
+                ExecutionResult<?> rtn = action.apply(instruction);
                 return new CommandResult<>(
-                        rtn.isSuccess() ? CommandResult.ResponseType.SUCCESS : CommandResult.ResponseType.ERROR,
-                        commandSide,
+                        instruction,
+                        (rtn.isSuccess() ? CommandResult.ResponseType.SUCCESS : CommandResult.ResponseType.ERROR),
                         rtn
                 );
             } else {
                 return new CommandResult<>(
+                        instruction,
                         CommandResult.ResponseType.ERROR,
-                        commandSide,
                         new ExecutionResult<>(false, "Error: Missing action on final command.")
                 );
             }
         } else {
             ArrayDeque<String> logs = new ArrayDeque<>();
             if (instruction.getArgs().length == 0) {
-                if (!requiresArgument && this.action != null) {
-                    ExecutionResult<?> rtn = this.action.apply(instruction);
+                if (!requiresArgument && action != null) {
+                    ExecutionResult<?> rtn = action.apply(instruction);
                     return new CommandResult<>(
+                            instruction,
                             rtn.isSuccess() ? CommandResult.ResponseType.SUCCESS : CommandResult.ResponseType.ERROR,
-                            commandSide,
                             rtn
                     );
                 } else {
@@ -201,18 +212,18 @@ public class AtbCommand {
                         logs.add(" - " + cn + (c.getAliases().isEmpty() ? "" : "|" + String.join("|", c.getAliases())) + " : " + c.getDescription());
                     });
                     return new CommandResult<>(
+                            instruction,
                             CommandResult.ResponseType.ERROR,
-                            commandSide,
                             new ExecutionResult<>(false, logs)
                     );
                 }
             } else {
                 CommandResult actionResult = null;
-                if (this.action != null) {
-                    ExecutionResult<?> rtn = this.action.apply(instruction);
+                if (action != null) {
+                    ExecutionResult<?> rtn = action.apply(instruction);
                     actionResult = new CommandResult<>(
+                            instruction,
                             rtn.isSuccess() ? CommandResult.ResponseType.COMBINED_SUCCESS : CommandResult.ResponseType.COMBINED_ERROR,
-                            commandSide,
                             rtn
                     );
                 }
@@ -227,7 +238,7 @@ public class AtbCommand {
                     }
                 }
                 if (subCommand != null) {
-                    CommandInstruction shiftedCommand = new CommandInstruction(instruction.getInput(), shiftArgs(instruction.getArgs()));
+                    CommandInstruction shiftedCommand = new CommandInstruction(instruction.getInput(), shiftArgs(instruction.getArgs()), instruction.getSide());
                     CommandResult<?> master = subCommand.execute(shiftedCommand);
                     if(actionResult != null) master.addCombinedResult(actionResult);
                     return master;
@@ -237,8 +248,8 @@ public class AtbCommand {
                         logs.add(" - " + cn + (c.getAliases().isEmpty() ? "" : "|" + String.join("|", c.getAliases())) + " : " + c.getDescription());
                     });
                     CommandResult<?> master = new CommandResult<>(
+                            instruction,
                             CommandResult.ResponseType.ERROR,
-                            commandSide,
                             new ExecutionResult<>(false, logs)
                     );
                     if(actionResult != null) master.addCombinedResult(actionResult);
@@ -246,14 +257,6 @@ public class AtbCommand {
                 }
             }
         }
-    }
-
-    public CommandSide getCommandSide() {
-        return commandSide;
-    }
-
-    public void setCommandSide(CommandSide commandSide) {
-        this.commandSide = commandSide;
     }
 
 }

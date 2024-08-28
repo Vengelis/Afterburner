@@ -1,9 +1,8 @@
 package fr.vengelis.afterburner.cli;
 
-import fr.vengelis.afterburner.AfterburnerApp;
-import fr.vengelis.afterburner.cli.command.AtbCommand;
-import fr.vengelis.afterburner.cli.command.AtbCommandLister;
-import fr.vengelis.afterburner.cli.command.CommandInstruction;
+import fr.vengelis.afterburner.AfterburnerClientApp;
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
+import fr.vengelis.afterburner.cli.command.*;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.events.impl.PrintedLogEvent;
 import fr.vengelis.afterburner.handler.PreInitHandler;
@@ -35,9 +34,9 @@ public class CliManager implements PreInitHandler {
                 .setName("list-all")
                 .setDescription("List all commands availables.")
                 .addAlias("la", "help", "?")
-                .setAction(commandLister)
+                .setActionServer(commandLister)
+                .setActionClient(commandLister)
                 .build());
-
         this.root.addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
                 .setName("instance")
                 .setDescription("Manage internal program instance.")
@@ -45,26 +44,28 @@ public class CliManager implements PreInitHandler {
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                         .setName("input")
                         .setDescription("Send input command to managed program console.")
-                        .setAction(arg -> {
+                        .setActionServer(arg -> {
                             String cmd = String.join(" ", arg.getArgs());
-                            boolean execRtn = AfterburnerApp.get().getManagedProcess().sendCommandToProcess(cmd);
+                            boolean execRtn = AfterburnerSlaveApp.get().getManagedProcess().sendCommandToProcess(cmd);
                             return new AtbCommand.ExecutionResult<>(
                                     execRtn,
                                     "Sending input [" + (execRtn ? "successful" : "interrupted") + "] > " + cmd
                             );
 
                         })
+                        .setActionClient(ClientCommandAction::perform)
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                         .setName("htop")
                         .setDescription("Display consommation informations.")
-                        .setAction(arg -> {
+                        .setActionServer(arg -> {
                             new GetAtbInfosInstruction().print();
 
                             // TODO : A completer
                             return new AtbCommand.ExecutionResult<>(true,
                                     "");
                         })
+                        .setActionClient(ClientCommandAction::perform)
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
                         .setName("config")
@@ -74,13 +75,14 @@ public class CliManager implements PreInitHandler {
                                 .setName("reload")
                                 .setDescription("Reload configuration.")
                                 .addAlias("r")
-                                .setAction(arg -> {
-                                    AfterburnerApp.get().loadTemplateConfig();
+                                .setActionServer(arg -> {
+                                    AfterburnerSlaveApp.get().loadTemplateConfig();
                                     return new AtbCommand.ExecutionResult<>(
                                             true,
                                             "Template configuration was reloaded !"
                                     );
                                 })
+                                .setActionClient(ClientCommandAction::perform)
                                 .build())
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
@@ -89,15 +91,17 @@ public class CliManager implements PreInitHandler {
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                                 .setName("direct")
                                 .setDescription("Enable or Disable Real-Time log viewing.")
-                                .setAction(arg -> {
-                                    boolean ns = !AfterburnerApp.get().isDisplayOutput();
+                                .setActionServer(arg -> {
+                                    boolean ns = !AfterburnerSlaveApp.get().isDisplayOutput();
                                     ConsoleLogger.printLine(Level.INFO, "Real-Time log viewing : " + ns);
-                                    AfterburnerApp.get().setDisplayOutput(ns);
-
-                                    // TODO : A completer
+                                    AfterburnerSlaveApp.get().setDisplayOutput(ns);
+                                    AfterburnerSlaveApp.get().getSocketServer().sendAllClient(
+                                            "Direct view enabled : " + ns
+                                    );
                                     return new AtbCommand.ExecutionResult<>(true,
-                                            "");
+                                            "Direct view enabled : " + ns);
                                 })
+                                .setActionClient(ClientCommandAction::perform)
                                 .build())
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
                                 .setName("history")
@@ -107,30 +111,31 @@ public class CliManager implements PreInitHandler {
                                         .setName("clear")
                                         .setDescription("Clear log history")
                                         .addAlias("c", "cl")
-                                        .setAction(arg -> {
+                                        .setActionServer(arg -> {
                                             new CleanLogHistoryInstruction().execute();
                                             return new AtbCommand.ExecutionResult<>(true,
                                                     "Log history was cleared !");
                                         })
+                                        .setActionClient(ClientCommandAction::perform)
                                         .build())
                                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                                         .setName("show")
                                         .setDescription("Display current logs (add '--show-skipped-line|-ssl' for view all lines)")
-                                        .setAction(arg -> {
+                                        .setActionServer(arg -> {
 
                                             boolean disableSkipper = isFinalDisableSkipper(arg.getArgs());
                                             AtomicInteger skip = new AtomicInteger();
 
-                                            AfterburnerApp.get().getLogHistory().forEach(log -> {
+                                            AfterburnerSlaveApp.get().getLogHistory().forEach(log -> {
                                                 PrintedLogEvent event1 = new PrintedLogEvent(log, PrintedLogEvent.Handler.CLI);
-                                                AfterburnerApp.get().getEventManager().call(event1);
+                                                AfterburnerSlaveApp.get().getEventManager().call(event1);
                                                 if(event1.isCancelled()) {
                                                     log.setSkip(true).save();
                                                     return;
                                                 }
 
                                                 if(!disableSkipper) {
-                                                    for(Skipper value : AfterburnerApp.get().getLogSkipperManager().getSkipperList()) {
+                                                    for(Skipper value : AfterburnerSlaveApp.get().getLogSkipperManager().getSkipperList()) {
                                                         if(value.getPattern().matcher(log.getLine()).find()) {
                                                             if(value.isCast()) ConsoleLogger.printLine(Level.INFO, "LH : Skipper trigger : " + log.getLine() + " (" + value.getLineSkip() + " lines ignored)");
                                                             if(value.getAction() != null) ConsoleLogger.printLine(Level.INFO, String.format("LH : Action of line >%s< is volontary skipped by log history !", log.getLine()));
@@ -150,25 +155,27 @@ public class CliManager implements PreInitHandler {
                                             return new AtbCommand.ExecutionResult<>(true,
                                                     "");
                                         })
+                                        .setActionClient(ClientCommandAction::perform)
                                         .build())
                                 .build())
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                         .setName("kill")
                         .setDescription("Kill current process instance.")
-                        .setAction(arg -> {
+                        .setActionServer(arg -> {
                             boolean rtn;
                             if(arg == null) {
-                                rtn = AfterburnerApp.get().killTask("No reason was specified in CLI");
+                                rtn = AfterburnerSlaveApp.get().killTask("No reason was specified in CLI");
                                 return new AtbCommand.ExecutionResult<>(rtn,
                                         "No reason was specified in CLI");
                             } else {
                                 String stg = String.join(" ", arg.getArgs());
-                                rtn = AfterburnerApp.get().killTask(stg);
+                                rtn = AfterburnerSlaveApp.get().killTask(stg);
                                 return new AtbCommand.ExecutionResult<>(rtn,
                                         stg);
                             }
                         })
+                        .setActionClient(ClientCommandAction::perform)
                         .build())
                 .build());
 
@@ -184,9 +191,9 @@ public class CliManager implements PreInitHandler {
                                 .setName("show")
                                 .setDescription("Show all commons files")
                                 .addAlias("list", "s")
-                                .setAction(arg -> {
+                                .setActionServer(arg -> {
                                     LinkedList<String> rtn = new LinkedList<>();
-                                    AfterburnerApp.get().getActualCommonFilesLoaded().forEach((cf, cflist) -> {
+                                    AfterburnerSlaveApp.get().getActualCommonFilesLoaded().forEach((cf, cflist) -> {
                                         if(cflist.isEmpty()) {
                                             rtn.add("Common file list of type '" + cf.getSimpleName() + "' is empty");
                                         } else {
@@ -200,12 +207,13 @@ public class CliManager implements PreInitHandler {
                                     return new AtbCommand.ExecutionResult<>(true,
                                             rtn);
                                 })
+                                .setActionClient(ClientCommandAction::perform)
                                 .build())
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                                 .setName("edit")
                                 .setDescription("Enable or disable common file - Command : atb cf edit <common file name> <setting> <true/false>")
                                 .requiresArgument()
-                                .setAction(arg -> {
+                                .setActionServer(arg -> {
                                     if(arg.getArgs().length < 3)
                                         return new AtbCommand.ExecutionResult<>(false,
                                                 "Missing common file name and/or settings and/or data of setting");
@@ -213,7 +221,7 @@ public class CliManager implements PreInitHandler {
                                         String cfn = arg.getArgs()[0];
                                         String setting = arg.getArgs()[1];
                                         String settingdata = arg.getArgs()[2];
-                                        Optional<BaseCommonFile> cfnr = AfterburnerApp.get().computeCommonFileWithName(cfn);
+                                        Optional<BaseCommonFile> cfnr = AfterburnerSlaveApp.get().computeCommonFileWithName(cfn);
                                         if(cfnr.isPresent()) {
                                             if(setting.equalsIgnoreCase("enabled")) {
                                                 boolean v = Boolean.parseBoolean(settingdata);
@@ -230,6 +238,7 @@ public class CliManager implements PreInitHandler {
                                         }
                                     }
                                 })
+                                .setActionClient(ClientCommandAction::perform)
                                 .build())
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
@@ -237,11 +246,12 @@ public class CliManager implements PreInitHandler {
                         .setDescription("Resumes the process after the previous one ends.")
                         .addAlias("rep")
                         .requiresArgument()
-                        .setAction(arg -> {
+                        .setActionServer(arg -> {
                             boolean rtn = new ReprepareInstruction(String.join(" ", arg.getArgs())).execute();
                             return new AtbCommand.ExecutionResult<>(rtn,
                                     rtn);
                         })
+                        .setActionClient(ClientCommandAction::perform)
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
                         .setName("plugin")
@@ -251,22 +261,23 @@ public class CliManager implements PreInitHandler {
                                 .setName("infos")
                                 .setDescription("List plugins informations")
                                 .addAlias("is")
-                                .setAction(args -> {
+                                .setActionServer(args -> {
                                     LinkedList<String> rtn = new LinkedList<>();
                                     rtn.add("Plugins : ");
-                                    AfterburnerApp.get().getPluginManager().getPlugins().forEach((pn, p) -> {
+                                    AfterburnerSlaveApp.get().getPluginManager().getPlugins().forEach((pn, p) -> {
                                         rtn.add(" - " + pn);
                                     });
                                     return new AtbCommand.ExecutionResult<>(true,
                                             rtn);
                                 })
+                                .setActionClient(ClientCommandAction::perform)
                                 .build())
                         .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                         .setName("shutdown")
                         .setDescription("Shutdown afterburner immediately.")
                         .addAlias("sh")
-                        .setAction(arg -> {
+                        .setActionServer(arg -> {
                             String reason = String.join(" ", arg.getArgs());
                             boolean wp = true;
                             if(reason.isEmpty()) reason = "Ordered by CLI without reason";
@@ -277,11 +288,12 @@ public class CliManager implements PreInitHandler {
                                         a.equalsIgnoreCase("-s"))
                                     wp = false;
                             }
-                            AfterburnerApp.get().killTask(reason, wp);
-                            AfterburnerApp.get().setReprepareEnabled(false);
+                            AfterburnerSlaveApp.get().killTask(reason, wp);
+                            AfterburnerSlaveApp.get().setReprepareEnabled(false);
                             return new AtbCommand.ExecutionResult<>(true,
                                     "Good by :D");
                         })
+                        .setActionClient(ClientCommandAction::perform)
                         .build())
                 .build());
 
@@ -302,8 +314,11 @@ public class CliManager implements PreInitHandler {
         return root;
     }
 
-    public void execute(String input) {
-        CommandInstruction instruction = new CommandInstruction(input, input.split("\\s+"));
-        this.root.execute(instruction);
+    public CommandResult<?> execute(String input, AtbCommand.CommandSide side) {
+        return this.root.execute(new CommandInstruction(input, input.split("\\s+"), side));
+    }
+
+    public CommandResult<?> execute(CommandInstruction input) {
+        return this.root.execute(input);
     }
 }

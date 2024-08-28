@@ -26,8 +26,14 @@ public enum ConfigGeneral {
     PATH_COMMON_FILES(null),
     PATH_JAVA(null),
 
+    QUERY_AUTO_BIND(null),
+    QUERY_HOST(null),
     QUERY_PORT(null),
     QUERY_PASSWORD(null),
+
+    QUERY_BROADCASTER_ENABLED(null),
+    QUERY_BROADCASTER_HOST(null),
+    QUERY_BROADCASTER_PORT(null),
 
     REDIS_ENABLED(null),
     REDIS_HOST(null),
@@ -54,6 +60,6 @@ public enum ConfigGeneral {
     }
 
     public boolean isDeprecated(int version) {
-        return version != 1;
+        return version != 3;
     }
 }

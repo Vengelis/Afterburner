@@ -24,6 +24,10 @@ public class ConsolePrinterFactory {
         printers.put(Map.class, new MapPrinter());
     }
 
+    public static void register(Class<?> clazz, IConsolePrinter<?> printer) {
+        printers.put(clazz, printer);
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> IConsolePrinter<T> getPrinter(Class<T> clazz) {
         for (Map.Entry<Class<?>, IConsolePrinter<?>> entry : printers.entrySet()) {

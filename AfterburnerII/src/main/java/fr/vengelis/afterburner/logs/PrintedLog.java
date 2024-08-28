@@ -1,11 +1,15 @@
 package fr.vengelis.afterburner.logs;
 
-import fr.vengelis.afterburner.AfterburnerApp;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.util.logging.Level;
 
 public class PrintedLog {
+
+    private static final Gson gson = new GsonBuilder().create();
 
     private final Level level;
     private final String line;
@@ -43,6 +47,14 @@ public class PrintedLog {
     }
 
     public void save() {
-        AfterburnerApp.get().getLogHistory().add(this);
+        AfterburnerSlaveApp.get().getLogHistory().add(this);
+    }
+
+    public String serialize() {
+        return gson.toJson(this);
+    }
+
+    public static PrintedLog deserialize(String json) {
+        return gson.fromJson(json, PrintedLog.class);
     }
 }

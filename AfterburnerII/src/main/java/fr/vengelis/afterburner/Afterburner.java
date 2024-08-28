@@ -22,9 +22,15 @@ public class Afterburner {
     public static boolean DISABLE_TEST_TEMPLATE = false;
     public static boolean VERBOSE_PROVIDERS = false;
     private static boolean DEFAULT_DISPLAY_PROGRAM_OUTPUT = true;
+    private static LaunchType LAUNCH_TYPE = LaunchType.SLAVE;
 
-    public static void main(String[] args) {
+    public enum LaunchType {
+        SLAVE,
+        CONSOLE_PANEL,
+        ;
+    }
 
+    public static void start() {
         ConsoleLogger.printLine(Level.INFO, "#-------------------------------------------------------------------------------------------------------------------------#");
         ConsoleLogger.printLine(Level.INFO, "|     _       __   _                   _                                                                                  |");
         ConsoleLogger.printLine(Level.INFO, "|    / \\     / _| | |_    ___   _ __  | |__    _   _   _ __   _ __     ___   _ __                                         |");
@@ -32,7 +38,7 @@ public class Afterburner {
         ConsoleLogger.printLine(Level.INFO, "|  / ___ \\  |  _| | |_  |  __/ | |    | |_) | | |_| | | |    | | | | |  __/ | |                                           |");
         ConsoleLogger.printLine(Level.INFO, "| /_/   \\_\\ |_|    \\__|  \\___| |_|    |_.__/   \\__,_| |_|    |_| |_|  \\___| |_|                                           |");
         ConsoleLogger.printLine(Level.INFO, "|                                                                                                                         |");
-        ConsoleLogger.printLine(Level.INFO, "|                                                                                       By Vengelis_  - " + getVersion());
+        ConsoleLogger.printLine(Level.INFO, "|                                                                                    By Vengelis_  - " + getVersion());
         ConsoleLogger.printLine(Level.INFO, "#-------------------------------------------------------------------------------------------------------------------------#");
 
         String startupCommand = System.getProperty("sun.java.command");
@@ -63,66 +69,95 @@ public class Afterburner {
             } else if (arg.startsWith("--no-default-output") || arg.startsWith("-ndo")) {
                 DEFAULT_DISPLAY_PROGRAM_OUTPUT = false;
                 ConsoleLogger.printLine(Level.CONFIG, "The managed program will not display the log by default");
+            } else if (arg.startsWith("--type-panel") || arg.startsWith("-tp")) {
+                LAUNCH_TYPE = LaunchType.CONSOLE_PANEL;
+                ConsoleLogger.printLine(Level.CONFIG, "Afterburner instance type panel in console !");
             }
         }
 
         ConsoleLogger.printLine(Level.CONFIG, "Working Area : " + WORKING_AREA);
 
-        if(template == null) {
-            ConsoleLogger.printLine(Level.SEVERE, "Missing template argument !");
-            System.exit(1);
-        }
-
         HandlerRecorder handlerRecorder = new HandlerRecorder();
-        AfterburnerApp app = null;
+        AApp app = null;
 
         try {
             InetAddress addr = InetAddress.getLocalHost();
             final String MACHINE_NAME = addr.getHostName();
-            app = new AfterburnerApp(MACHINE_NAME, template, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
+            if(LAUNCH_TYPE.equals(LaunchType.SLAVE))
+                app = new AfterburnerSlaveApp(MACHINE_NAME, template, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
+            else if(LAUNCH_TYPE.equals(LaunchType.CONSOLE_PANEL))
+                app = new AfterburnerClientApp();
         } catch (UnknownHostException ex) {
             System.out.println("Hostname can not be resolved");
             System.exit(1);
         }
 
-        AfterburnerApp finalApp = app;
-        new Thread(() -> {
-            finalApp.exportRessources();
-            handlerRecorder.executeSuperPreInit();
-            finalApp.loadPluginsAndProviders();
-            finalApp.loadGeneralConfigs();
-            handlerRecorder.executePreInit();
-            finalApp.initialize();
-            finalApp.setReprepareEnabled(true);
-            while (finalApp.isReprepareEnabled()) {
-                finalApp.setReprepareEnabled(false);
-                finalApp.setRepreparedCount(finalApp.getRepreparedCount() + 1);
-                finalApp.preparing();
-                finalApp.execute();
-                finalApp.ending();
+        if(app instanceof AfterburnerSlaveApp) {
+            AfterburnerSlaveApp finalApp = (AfterburnerSlaveApp) app;
+
+            if(template == null) {
+                ConsoleLogger.printLine(Level.SEVERE, "Missing template argument !");
+                System.exit(1);
             }
-            finalApp.getRunnableManager().shutdown();
-            if(finalApp.getRepreparedCount() > 1) {
-                ConsoleLogger.printLine(Level.INFO, "Number of times reprepared : " + finalApp.getRepreparedCount());
-            }
-            System.exit(0);
 
-        }).start();
+            new Thread(() -> {
+                finalApp.exportRessources();
+                handlerRecorder.executeSuperPreInit();
+                finalApp.loadPluginsAndProviders();
+                finalApp.loadGeneralConfigs();
+                handlerRecorder.executePreInit();
+                finalApp.initialize();
+                finalApp.setReprepareEnabled(true);
+                while (finalApp.isReprepareEnabled()) {
+                    finalApp.setReprepareEnabled(false);
+                    finalApp.setRepreparedCount(finalApp.getRepreparedCount() + 1);
+                    finalApp.preparing();
+                    finalApp.execute();
+                    finalApp.ending();
+                }
+                finalApp.getRunnableManager().shutdown();
+                finalApp.getSocketServer().stop();
+                if(finalApp.getRepreparedCount() > 1) {
+                    ConsoleLogger.printLine(Level.INFO, "Number of times reprepared : " + finalApp.getRepreparedCount());
+                }
+                System.exit(0);
 
-        Scanner keyboard = new Scanner(System.in);
-        String input;
+            }).start();
 
-        while (true) {
-            AfterburnerApp appi = AfterburnerApp.get();
-            if (appi != null && appi.getSocketClient() != null) {
+            Scanner keyboard = new Scanner(System.in);
+            String input;
+
+            while (true) {
                 input = keyboard.nextLine();
                 if (input != null && !input.trim().isEmpty()) {
-                    CommandResultReader.read(app.getCliManager().getRootCommand().execute(new CommandInstruction(input, input.split("\\s+"), AtbCommand.CommandSide.SERVER)));
+                    CommandResultReader.read(app.getCliManager().execute(
+                            new CommandInstruction(
+                                    input,
+                                    input.split("\\s+"),
+                                    AtbCommand.CommandSide.SERVER)));
                 } else {
                     ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
                 }
             }
+
+        } else if(app instanceof AfterburnerClientApp) {
+            AfterburnerClientApp finalApp = (AfterburnerClientApp) app;
+            new Thread(() -> {
+                finalApp.exportRessources();
+                handlerRecorder.executeSuperPreInit();
+                finalApp.loadPluginsAndProviders();
+                finalApp.loadGeneralConfigs();
+                handlerRecorder.executePreInit();
+                finalApp.initialize();
+                finalApp.preparing();
+                finalApp.execute();
+                finalApp.ending();
+            }).start();
         }
+    }
+
+    public static void main(String[] args) {
+        start();
     }
 
     public static String getVersion() {
@@ -138,5 +173,9 @@ public class Afterburner {
             ConsoleLogger.printStacktrace(e);
             return null;
         }
+    }
+
+    public static LaunchType getLaunchType() {
+        return LAUNCH_TYPE;
     }
 }

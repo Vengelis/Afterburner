@@ -1,6 +1,6 @@
 package fr.vengelis.afterburner.mprocess;
 
-import fr.vengelis.afterburner.AfterburnerApp;
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.configurations.ConfigTemplate;
 import fr.vengelis.afterburner.events.impl.ExecutableEvent;
@@ -29,7 +29,7 @@ public class ManagedProcess {
 
     public ManagedProcess(UUID uniqueId) {
         this.uniqueId = uniqueId;
-        Optional<BaseArgumentWrapper> gwrap = AfterburnerApp.get().getArgumentWrapperManager().get(ConfigTemplate.EXECUTABLE_TYPE.getData().toString());
+        Optional<BaseArgumentWrapper> gwrap = AfterburnerSlaveApp.get().getArgumentWrapperManager().get(ConfigTemplate.EXECUTABLE_TYPE.getData().toString());
         if(!gwrap.isPresent()) {
             wrapper = new JavaArguments();
             ConsoleLogger.printLine(Level.SEVERE, "Unrecognized managed program type ! Applying default : " + wrapper.getType());
@@ -48,11 +48,11 @@ public class ManagedProcess {
         }
         stb.append(wrapper.getFinalExecutable())
                 .append(" DafterbunerUuid=" + uniqueId)
-                .append(" Djobid=" + AfterburnerApp.get().getProviderManager().getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
-                .append(" DserverOwner=" + AfterburnerApp.get().getProviderManager().getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
+                .append(" Djobid=" + AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
+                .append(" DserverOwner=" + AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
 
         ExecutableEvent event = new ExecutableEvent(stb);
-        AfterburnerApp.get().getEventManager().call(event);
+        AfterburnerSlaveApp.get().getEventManager().call(event);
 
         ConsoleLogger.printLine(Level.INFO, "Final built java command : " + event.getCmdline());
 
@@ -72,7 +72,7 @@ public class ManagedProcess {
                     .start();
 
             Signal.handle(new Signal("INT"), sig -> {
-                AfterburnerApp.get().killTask("Ordered by CLI");
+                AfterburnerSlaveApp.get().killTask("Ordered by CLI");
                 System.exit(0);
             });
             InputStream is = process.getInputStream();
@@ -80,17 +80,17 @@ public class ManagedProcess {
             BufferedReader br = new BufferedReader(isr);
             String line;
             int skip = 0;
-            if(!AfterburnerApp.get().isDisplayOutput()) ConsoleLogger.printLine(Level.INFO, "The managed program is running. Type 'help' to list available commands");
+            if(!AfterburnerSlaveApp.get().isDisplayOutput()) ConsoleLogger.printLine(Level.INFO, "The managed program is running. Type 'help' to list available commands");
             try {
                 while ((line = br.readLine()) != null) {
                     PrintedLog log = new PrintedLog(line);
                     PrintedLogEvent event1 = new PrintedLogEvent(log, PrintedLogEvent.Handler.PROCESS);
-                    AfterburnerApp.get().getEventManager().call(event);
+                    AfterburnerSlaveApp.get().getEventManager().call(event);
                     if(event1.isCancelled()) {
                         log.setSkip(true).save();
                         continue;
                     }
-                    for(Skipper value : AfterburnerApp.get().getLogSkipperManager().getSkipperList()) {
+                    for(Skipper value : AfterburnerSlaveApp.get().getLogSkipperManager().getSkipperList()) {
                         if(value.getPattern().matcher(line).find()) {
                             if(value.isCast()) ConsoleLogger.printLine(Level.INFO, "Skipper trigger : " + log.getLine() + " (" + value.getLineSkip() + " lines ignored)");
                             if(value.getAction() != null) value.getAction().accept(log.getLine());
@@ -98,14 +98,13 @@ public class ManagedProcess {
                         }
                     }
                     if(skip == 0) {
-                        // TODO : Rendre compatible avec l'envoie de la data aux sockets clients
-                        if(AfterburnerApp.get().isDisplayOutput()) log.print();
+                        if(AfterburnerSlaveApp.get().isDisplayOutput()) log.print();
                         log.save();
-                    }
-                    else {
+                    } else {
                         log.setSkip(true).save();
                         skip--;
                     }
+                    AfterburnerSlaveApp.get().getSocketServer().sendAllClient("Server:EchoLog:SkipEmbarked:" + log.serialize());
                 }
             } catch (IOException e) {
                 ConsoleLogger.printLine(Level.SEVERE, "Managed program was suddenly closed");
