@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.events.impl;
+package fr.vengelis.afterburner.events.impl.common;
 
 import fr.vengelis.afterburner.events.AbstractCancelableEvent;
 import fr.vengelis.afterburner.logs.PrintedLog;
@@ -7,7 +7,7 @@ import fr.vengelis.afterburner.logs.PrintedLog;
  * This class represents the PrintedLogEvent in the application.
  * It extends the AbstractCancelableEvent class, which means it inherits all of its methods and properties.
  * <p>
- * This event is triggered after a log has been printed into console.
+ * This event is triggered after a log has been printed into console by managed application or cli manager.
  * <p>
  * It has one property:
  * <ul>

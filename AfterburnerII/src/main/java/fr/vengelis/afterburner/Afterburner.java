@@ -3,6 +3,7 @@ package fr.vengelis.afterburner;
 import fr.vengelis.afterburner.cli.command.AtbCommand;
 import fr.vengelis.afterburner.cli.command.CommandInstruction;
 import fr.vengelis.afterburner.cli.command.CommandResultReader;
+import fr.vengelis.afterburner.events.impl.common.SendInstructionEvent;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
@@ -26,7 +27,8 @@ public class Afterburner {
 
     public enum LaunchType {
         SLAVE,
-        CONSOLE_PANEL,
+        PANEL,
+        BROADCASTER,
         ;
     }
 
@@ -69,9 +71,20 @@ public class Afterburner {
             } else if (arg.startsWith("--no-default-output") || arg.startsWith("-ndo")) {
                 DEFAULT_DISPLAY_PROGRAM_OUTPUT = false;
                 ConsoleLogger.printLine(Level.CONFIG, "The managed program will not display the log by default");
-            } else if (arg.startsWith("--type-panel") || arg.startsWith("-tp")) {
-                LAUNCH_TYPE = LaunchType.CONSOLE_PANEL;
-                ConsoleLogger.printLine(Level.CONFIG, "Afterburner instance type panel in console !");
+            } else if (arg.startsWith("--type-launch") || arg.startsWith("-tl")) {
+                String type = "SLAVE";
+                if(arg.startsWith("--type-launch"))
+                    type = arg.substring("--type-launch:".length()).toUpperCase();
+                if(arg.startsWith("-tl"))
+                    type = arg.substring("-tl:".length()).toUpperCase();
+                try {
+                    LAUNCH_TYPE = LaunchType.valueOf(type);
+                    ConsoleLogger.printLine(Level.CONFIG, "Afterburner instance type '" + LAUNCH_TYPE.name() + "'");
+                } catch (IllegalArgumentException e) {
+                    ConsoleLogger.printStacktrace(e, "Unrecognized launcher type !");
+                    System.exit(1);
+                }
+
             }
         }
 
@@ -85,8 +98,10 @@ public class Afterburner {
             final String MACHINE_NAME = addr.getHostName();
             if(LAUNCH_TYPE.equals(LaunchType.SLAVE))
                 app = new AfterburnerSlaveApp(MACHINE_NAME, template, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
-            else if(LAUNCH_TYPE.equals(LaunchType.CONSOLE_PANEL))
+            else if(LAUNCH_TYPE.equals(LaunchType.PANEL))
                 app = new AfterburnerClientApp();
+            else if(LAUNCH_TYPE.equals(LaunchType.BROADCASTER))
+                app = new AfterburnerBroadcasterApp();
         } catch (UnknownHostException ex) {
             System.out.println("Hostname can not be resolved");
             System.exit(1);
@@ -130,11 +145,16 @@ public class Afterburner {
             while (true) {
                 input = keyboard.nextLine();
                 if (input != null && !input.trim().isEmpty()) {
-                    CommandResultReader.read(app.getCliManager().execute(
-                            new CommandInstruction(
-                                    input,
-                                    input.split("\\s+"),
-                                    AtbCommand.CommandSide.SERVER)));
+                    CommandInstruction instruction = new CommandInstruction(
+                            input,
+                            input.split("\\s+"),
+                            AtbCommand.CommandSide.SERVER);
+                    SendInstructionEvent event = new SendInstructionEvent(instruction);
+                    AfterburnerSlaveApp.get().getEventManager().call(event);
+                    if(event.isCancelled())
+                        ConsoleLogger.printLine(Level.INFO, "Command cancel reason : " + event.getCancelReason());
+                    else
+                        CommandResultReader.read(app.getCliManager().execute(event.getInstruction()));
                 } else {
                     ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
                 }
@@ -153,6 +173,21 @@ public class Afterburner {
                 finalApp.execute();
                 finalApp.ending();
             }).start();
+        } else if(app instanceof AfterburnerBroadcasterApp) {
+            AfterburnerBroadcasterApp finalApp = (AfterburnerBroadcasterApp) app;
+            new Thread(() -> {
+                finalApp.exportRessources();
+                handlerRecorder.executeSuperPreInit();
+                finalApp.loadPluginsAndProviders();
+                finalApp.loadGeneralConfigs();
+                handlerRecorder.executePreInit();
+                finalApp.initialize();
+                finalApp.preparing();
+                finalApp.execute();
+                finalApp.ending();
+            }).start();
+        } else {
+            System.exit(0);
         }
     }
 

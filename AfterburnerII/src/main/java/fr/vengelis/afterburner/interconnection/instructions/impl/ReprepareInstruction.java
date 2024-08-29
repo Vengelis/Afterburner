@@ -2,7 +2,7 @@ package fr.vengelis.afterburner.interconnection.instructions.impl;
 
 import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.AfterburnerSlaveApp;
-import fr.vengelis.afterburner.events.impl.ReprepareRequestEvent;
+import fr.vengelis.afterburner.events.impl.slave.ReprepareRequestEvent;
 import fr.vengelis.afterburner.interconnection.instructions.BaseCommunicationInstruction;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 

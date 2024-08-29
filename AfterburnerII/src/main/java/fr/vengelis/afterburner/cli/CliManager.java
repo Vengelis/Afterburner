@@ -1,10 +1,9 @@
 package fr.vengelis.afterburner.cli;
 
-import fr.vengelis.afterburner.AfterburnerClientApp;
 import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.cli.command.*;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
-import fr.vengelis.afterburner.events.impl.PrintedLogEvent;
+import fr.vengelis.afterburner.events.impl.common.PrintedLogEvent;
 import fr.vengelis.afterburner.handler.PreInitHandler;
 import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistoryInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
@@ -95,6 +94,7 @@ public class CliManager implements PreInitHandler {
                                     boolean ns = !AfterburnerSlaveApp.get().isDisplayOutput();
                                     ConsoleLogger.printLine(Level.INFO, "Real-Time log viewing : " + ns);
                                     AfterburnerSlaveApp.get().setDisplayOutput(ns);
+                                    AfterburnerSlaveApp.get().getSocketServer().sendAllClient("dli:" + AfterburnerSlaveApp.get().isDisplayOutput());
                                     AfterburnerSlaveApp.get().getSocketServer().sendAllClient(
                                             "Direct view enabled : " + ns
                                     );

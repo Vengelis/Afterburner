@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.events.impl;
+package fr.vengelis.afterburner.events.impl.slave;
 
 import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.events.AbstractCancelableEvent;

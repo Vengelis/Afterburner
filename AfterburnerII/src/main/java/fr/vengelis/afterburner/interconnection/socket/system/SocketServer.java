@@ -1,6 +1,9 @@
 package fr.vengelis.afterburner.interconnection.socket.system;
 
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
+import fr.vengelis.afterburner.events.impl.common.ClientConnectEvent;
+import fr.vengelis.afterburner.events.impl.common.ClientDisconnectEvent;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.handler.PreInitHandler;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
@@ -55,7 +58,7 @@ public class SocketServer implements PreInitHandler {
                 Socket clientSocket = serverSocket.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 UUID clientId = UUID.fromString(in.readLine());
-                ClientHandler clientHandler = new ClientHandler(clientSocket, this, clientId);
+                ClientHandler clientHandler = new ClientHandler(clientSocket, this, new ClientInformations(clientId));
                 addClient(clientId, clientHandler);
                 new Thread(clientHandler).start();
 
@@ -69,13 +72,18 @@ public class SocketServer implements PreInitHandler {
         if(clients.containsKey(clientId)) return;
         clients.put(clientId, clientHandler);
         ConsoleLogger.printLine(Level.INFO, "Query client connected : " + clientId);
+        AfterburnerSlaveApp.get().getEventManager().call(new ClientConnectEvent(clientHandler.getClientInformations()));
     }
 
     public void removeClient(UUID clientId) {
         if(!clients.containsKey(clientId)) return;
+        ClientInformations ci = clients.get(clientId).getClientInformations();
         boolean disconnected = clients.get(clientId).isDisconnected();
         clients.remove(clientId);
-        if(!disconnected) ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId);
+        if(!disconnected) {
+            ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId);
+            AfterburnerSlaveApp.get().getEventManager().call(new ClientDisconnectEvent(ci));
+        }
     }
 
     public void forceDisconnectClient(UUID clientId) {
@@ -83,7 +91,6 @@ public class SocketServer implements PreInitHandler {
         if (clientHandler != null) {
             clientHandler.closeConnection();
             removeClient(clientId);
-            ConsoleLogger.printLine(Level.INFO, "Client socket " + clientId + " closed.");
         }
     }
 

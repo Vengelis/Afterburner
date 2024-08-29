@@ -15,11 +15,10 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 import java.util.logging.Level;
 
 public class ClientHandler implements Runnable {
-    private UUID clientId;
+    private ClientInformations clientInformations;
     private final Socket clientSocket;
     private final SocketServer server;
     private PrintWriter out;
@@ -27,10 +26,10 @@ public class ClientHandler implements Runnable {
     private boolean authenticated = false;
     private boolean disconnected = false;
 
-    public ClientHandler(Socket clientSocket, SocketServer server, UUID clientId) {
+    public ClientHandler(Socket clientSocket, SocketServer server, ClientInformations clientInformations) {
         this.clientSocket = clientSocket;
         this.server = server;
-        this.clientId = clientId;
+        this.clientInformations = clientInformations;
     }
 
     @Override
@@ -43,7 +42,7 @@ public class ClientHandler implements Runnable {
             if (verifyPassword(hashedPassword)) {
                 authenticated = true;
                 out.println("Authentication successful");
-                server.addClient(clientId, this);
+                server.addClient(clientInformations.getUuid(), this);
             } else {
                 out.println("Authentication failed");
                 closeConnection();
@@ -60,6 +59,8 @@ public class ClientHandler implements Runnable {
                         out.println("Server: disconnect");
                         closeConnection();
                         break;
+                    } else if (inputLine.equalsIgnoreCase("getdisplay")) {
+                        out.println("dli:" + AfterburnerSlaveApp.get().isDisplayOutput());
                     }
 
                     /*
@@ -72,30 +73,32 @@ public class ClientHandler implements Runnable {
                     */
                     else {
                         if(inputLine.startsWith("Server:EchoLog:")) continue;
-                        ConsoleLogger.printLine(Level.INFO, "[SocketServer] Received from " + clientId + ": " + inputLine);
+                        ConsoleLogger.printLine(Level.INFO, "[SocketServer] Received from " + clientInformations.getUuid() + ": " + inputLine);
                         if(!inputLine.trim().isEmpty()) {
                             CommandResult<?> rtn = AfterburnerSlaveApp.get().getCliManager().execute(inputLine, AtbCommand.CommandSide.SERVER);
                             CommandResultReader.read(rtn);
-//                            AfterburnerApp.get().getSocketServer().sendAllClient("Echo: " + rtn.serialize());
+                            AfterburnerSlaveApp.get().getSocketServer().sendAllClient("Echo: " + rtn.serialize());
                         } else {
                             out.println("Echo: No command entered. Please try again.");
                         }
                     }
                 }
             } catch (SocketException e) {
-                ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId);
+                ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientInformations.getUuid());
                 disconnected = true;
+                AfterburnerSlaveApp.get().getSocketServer().forceDisconnectClient(clientInformations.getUuid());
+
             }
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(e);
         } finally {
             closeConnection();
-            server.removeClient(clientId);
+            server.removeClient(clientInformations.getUuid());
         }
     }
 
     private boolean verifyPassword(String hashedPassword) {
-        String correctHashedPassword = hashPassword((String) ConfigGeneral.QUERY_PASSWORD.getData(), clientId.toString());
+        String correctHashedPassword = hashPassword((String) ConfigGeneral.QUERY_PASSWORD.getData(), clientInformations.getUuid().toString());
         return correctHashedPassword.equals(hashedPassword);
     }
 
@@ -132,4 +135,9 @@ public class ClientHandler implements Runnable {
     public void sendMessage(String message) {
         out.println(message);
     }
+
+    public ClientInformations getClientInformations() {
+        return clientInformations;
+    }
+
 }
