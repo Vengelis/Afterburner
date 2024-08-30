@@ -6,3 +6,4 @@
 api:
   host: "localhost"
   port: 46799
+  token: "bearer-token"

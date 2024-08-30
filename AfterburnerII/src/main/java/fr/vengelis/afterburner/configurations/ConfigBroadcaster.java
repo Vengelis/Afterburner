@@ -4,6 +4,7 @@ public enum ConfigBroadcaster {
 
     API_HOST(null),
     API_PORT(null),
+    API_TOKEN(null),
     ;
 
     private Object data;

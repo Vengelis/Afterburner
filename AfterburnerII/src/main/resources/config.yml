@@ -38,7 +38,6 @@ paths:
 # |                  Query Console settings                    |
 # #============================================================#
 #  Afterburner can receive instructions via socket server
-#  NOT IMPLEMENTED !!!
 
 query:
   host-auto-bind: true
@@ -50,6 +49,8 @@ query-broadcaster:
   enabled: false
   host: "localhost"
   port: 46799
+  token: "bearer-token"
+  is-https: false
 
 # #============================================================#
 # |                      Redis settings                        |

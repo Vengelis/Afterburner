@@ -12,12 +12,11 @@ import fr.vengelis.afterburner.events.impl.common.EndEvent;
 import fr.vengelis.afterburner.events.impl.common.ExecutableEvent;
 import fr.vengelis.afterburner.events.impl.common.InitializeEvent;
 import fr.vengelis.afterburner.events.impl.common.PreparingEvent;
-import fr.vengelis.afterburner.events.impl.slave.KillTaskEvent;
-import fr.vengelis.afterburner.events.impl.slave.PickWorldEvent;
-import fr.vengelis.afterburner.events.impl.slave.RegisterRedisTaskEvent;
-import fr.vengelis.afterburner.events.impl.slave.SavingMapEvent;
+import fr.vengelis.afterburner.events.impl.slave.*;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
+import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast;
+import fr.vengelis.afterburner.interconnection.socket.broadcaster.BroadcasterWebApiHandler;
 import fr.vengelis.afterburner.interconnection.socket.system.SocketServer;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
@@ -33,13 +32,17 @@ import fr.vengelis.afterburner.interconnection.redis.task.impl.RedisCleanLogHist
 import fr.vengelis.afterburner.interconnection.redis.task.impl.RedisKillTask;
 import fr.vengelis.afterburner.interconnection.redis.task.impl.RedisReprepareTask;
 import fr.vengelis.afterburner.runnables.RunnableManager;
+import fr.vengelis.afterburner.runnables.impl.slave.SBRunnable;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.ResourceExporter;
 import org.apache.commons.io.FileUtils;
+import org.springframework.http.HttpMethod;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -49,8 +52,9 @@ public class AfterburnerSlaveApp implements AApp {
     private final String MACHINE_NAME;
     private final String TEMPLATE;
 
-    private final ResourceExporter exporter = new ResourceExporter();
+    private AfterburnerState state = AfterburnerState.NOT_STARTED;
 
+    private final ResourceExporter exporter = new ResourceExporter();
     private final EventManager eventManager = new EventManager();
     private final ProviderManager providerManager = new ProviderManager();
     private final PluginManager pluginManager = new PluginManager();
@@ -73,6 +77,8 @@ public class AfterburnerSlaveApp implements AApp {
     private int repreparedCount = 0;
     private final LinkedList<PrintedLog> logHistory = new LinkedList<>();
     private boolean displayOutput;
+    private SlaveBroadcast slaveBroadcast;
+    private BroadcasterWebApiHandler broadcasterWebApiHandler;
 
     public AfterburnerSlaveApp(String machineName, String templateName, boolean defaultDisplayProgramOutput) {
         instance = this;
@@ -83,6 +89,7 @@ public class AfterburnerSlaveApp implements AApp {
 
     @Override
     public void exportRessources() {
+        state = AfterburnerState.EXPORTING;
         ConsoleLogger.printLine(Level.INFO, "Exporting configurations ...");
         try {
             AfterburnerAppCommon.exportRessources(this);
@@ -96,6 +103,7 @@ public class AfterburnerSlaveApp implements AApp {
 
     @Override
     public void loadPluginsAndProviders() {
+        state = AfterburnerState.LOADING;
         AfterburnerAppCommon.loadProviderAndPlugin(this);
     }
 
@@ -232,6 +240,8 @@ public class AfterburnerSlaveApp implements AApp {
     public void initialize() {
         if(alreadyInit) return;
         alreadyInit = true;
+
+        state = AfterburnerState.INITIALIZING;
         ConsoleLogger.printLine(Level.INFO, "Initializing");
 
         if((boolean) ConfigGeneral.REDIS_ENABLED.getData()) {
@@ -258,16 +268,40 @@ public class AfterburnerSlaveApp implements AApp {
             }));
         }
 
+        if((boolean) ConfigGeneral.QUERY_BROADCASTER_ENABLED.getData()) {
+            slaveBroadcast = new SlaveBroadcast(
+                    uniqueId,
+                    MACHINE_NAME,
+                    ConfigGeneral.QUERY_BROADCASTER_HOST.getData().toString(),
+                    (Integer) ConfigGeneral.QUERY_BROADCASTER_PORT.getData()
+            );
+            slaveBroadcast.setAvailable(false);
+            slaveBroadcast.setLastContact(Instant.now().getEpochSecond());
+
+            broadcasterWebApiHandler = new BroadcasterWebApiHandler(
+                    ((boolean) ConfigGeneral.QUERY_BROADCASTER_HTTPS.getData() ? "https" : "http") +
+                            "://" +
+                            ConfigGeneral.QUERY_BROADCASTER_HOST.getData().toString() + ":" +
+                            ConfigGeneral.QUERY_BROADCASTER_PORT.getData().toString(),
+                    ConfigGeneral.QUERY_BROADCASTER_TOKEN.getData().toString(),
+                    (short) 1000
+            );
+
+            broadcasterWebApiHandler.sendRequest(slaveBroadcast, BroadcasterWebApiHandler.Action.ADD, HttpMethod.POST);
+            runnableManager.runTaskTimer(new SBRunnable(), 0L, 1L, TimeUnit.SECONDS);
+        }
+
         eventManager.call(new InitializeEvent());
     }
 
     @Override
     public void preparing() {
+        state = AfterburnerState.PREPARING;
         ConsoleLogger.printLine(Level.INFO, "Preparing");
         PreparingEvent event = new PreparingEvent(PreparingEvent.Stage.PRE);
         eventManager.call(event);
         if(!event.isCancelled()) {
-            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.CLEANING_RENDERING_FOLDER)) {
+            if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.CLEANING_RENDERING_FOLDER)) {
                 ConsoleLogger.printLine(Level.INFO, "Cleaning rendering directory");
                 try {
                     FileUtils.cleanDirectory(new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString()));
@@ -275,7 +309,7 @@ public class AfterburnerSlaveApp implements AApp {
                     ConsoleLogger.printStacktrace(e, "There was a problem cleaning the render folder");
                 }
             }
-            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.COPY_TEMPLATE)) {
+            if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.COPY_TEMPLATE)) {
                 ConsoleLogger.printLine(Level.INFO, "Copying template into rendering directory");
                 try {
                     FileUtils.copyDirectory(
@@ -285,7 +319,7 @@ public class AfterburnerSlaveApp implements AApp {
                     ConsoleLogger.printStacktrace(e, "There was a problem copying template to render folder");
                 }
             }
-            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.COPY_COMMON_FILES)) {
+            if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.COPY_COMMON_FILES)) {
                 ConsoleLogger.printLine(Level.INFO, "Copying commons files into rendering directory");
                 Map<Class<? extends BaseCommonFile>, List<Object>> commonFilesData = (HashMap<Class<? extends BaseCommonFile>, List<Object>>) ConfigTemplate.COMMON_FILES.getData();
                 for(Class<? extends BaseCommonFile> type : commonFilesData.keySet()) {
@@ -306,7 +340,7 @@ public class AfterburnerSlaveApp implements AApp {
                 }
             }
 
-            if(!event.getSkipStep().contains(PreparingEvent.PreparingStep.MAP_PICKER)) {
+            if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.MAP_PICKER)) {
                 ConsoleLogger.printLine(Level.INFO, "Checking map picker");
                 for (ConfigTemplate.MapPicker picker : ((ArrayList<ConfigTemplate.MapPicker>) ConfigTemplate.MAP_PICKER.getData())) {
                     if(picker.isEnabled()) {
@@ -336,6 +370,7 @@ public class AfterburnerSlaveApp implements AApp {
 
     @Override
     public void execute() {
+        state = AfterburnerState.EXECUTING;
         ConsoleLogger.printLine(Level.INFO, "Preparing executable");
 
         managedProcess = new ManagedProcess(uniqueId);
@@ -349,6 +384,7 @@ public class AfterburnerSlaveApp implements AApp {
 
     @Override
     public void ending() {
+        state = AfterburnerState.ENDING;
         eventManager.call(new EndEvent());
         if((boolean) ConfigTemplate.SAVE_ENABLED.getData()) {
             ConsoleLogger.printLine(Level.INFO, "Map saver enabled, saving maps");
@@ -372,6 +408,7 @@ public class AfterburnerSlaveApp implements AApp {
             ConsoleLogger.printLine(Level.INFO, "Map saver disabled");
         }
         ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
+        shutdown();
     }
 
     public boolean killTask() {
@@ -399,8 +436,7 @@ public class AfterburnerSlaveApp implements AApp {
                 ConsoleLogger.printLine(Level.WARNING, "Kill task received, shutting down managed process (Reason : " + message + ").");
                 if(event.isShutdownAfterburner()) {
                     ConsoleLogger.printLine(Level.WARNING, "Shutting down afterburner.");
-                    socketServer.stop();
-                    System.exit(0);
+                    shutdown();
                 }
                 return true;
             } else {
@@ -408,6 +444,12 @@ public class AfterburnerSlaveApp implements AApp {
             }
         }
         return false;
+    }
+
+    private void shutdown() {
+        eventManager.call(new ShutdownEvent());
+        socketServer.stop();
+        System.exit(0);
     }
 
     public static AfterburnerSlaveApp get() {
@@ -532,4 +574,15 @@ public class AfterburnerSlaveApp implements AApp {
         return socketServer;
     }
 
+    public SlaveBroadcast getSlaveBroadcast() {
+        return slaveBroadcast;
+    }
+
+    public BroadcasterWebApiHandler getBroadcasterWebApiHandler() {
+        return broadcasterWebApiHandler;
+    }
+
+    public AfterburnerState getState() {
+        return state;
+    }
 }

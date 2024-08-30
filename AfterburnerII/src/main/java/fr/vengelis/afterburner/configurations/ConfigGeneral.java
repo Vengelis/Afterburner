@@ -34,6 +34,8 @@ public enum ConfigGeneral {
     QUERY_BROADCASTER_ENABLED(null),
     QUERY_BROADCASTER_HOST(null),
     QUERY_BROADCASTER_PORT(null),
+    QUERY_BROADCASTER_TOKEN(null),
+    QUERY_BROADCASTER_HTTPS(null),
 
     REDIS_ENABLED(null),
     REDIS_HOST(null),

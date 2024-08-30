@@ -7,18 +7,18 @@ import java.util.List;
 
 public class PreparingEvent extends AbstractCancelableEvent {
 
-    private List<PreparingStep> skipStep = new ArrayList<>();
+    private List<SlavePreparingStep> skipStep = new ArrayList<>();
     private final Stage stage;
 
     public PreparingEvent(Stage stage) {
         this.stage = stage;
     }
 
-    public List<PreparingStep> getSkipStep() {
+    public List<SlavePreparingStep> getSkipStep() {
         return skipStep;
     }
 
-    public void setSkipStep(List<PreparingStep> skipStep) {
+    public void setSkipStep(List<SlavePreparingStep> skipStep) {
         this.skipStep = skipStep;
     }
 
@@ -26,7 +26,7 @@ public class PreparingEvent extends AbstractCancelableEvent {
         return stage;
     }
 
-    public enum PreparingStep {
+    public enum SlavePreparingStep {
 
         CLEANING_RENDERING_FOLDER,
         COPY_TEMPLATE,

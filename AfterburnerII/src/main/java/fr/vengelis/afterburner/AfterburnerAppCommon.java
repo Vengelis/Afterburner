@@ -101,6 +101,8 @@ public class AfterburnerAppCommon {
             ConfigGeneral.QUERY_BROADCASTER_ENABLED.setData(queryBroadcaster.get("enabled"));
             ConfigGeneral.QUERY_BROADCASTER_HOST.setData(queryBroadcaster.get("host"));
             ConfigGeneral.QUERY_BROADCASTER_PORT.setData(queryBroadcaster.get("port"));
+            ConfigGeneral.QUERY_BROADCASTER_TOKEN.setData(queryBroadcaster.get("token"));
+            ConfigGeneral.QUERY_BROADCASTER_HTTPS.setData(queryBroadcaster.get("is-https"));
 
             Map<String, Object> redis = (Map<String, Object>) data.get("redis");
             ConfigGeneral.REDIS_ENABLED.setData(redis.get("enabled"));
