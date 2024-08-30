@@ -6,6 +6,7 @@ import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.events.impl.common.SendInstructionEvent;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +46,9 @@ public class Afterburner {
 
         String startupCommand = System.getProperty("sun.java.command");
         String[] stArgs = startupCommand.split(" ");
+
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        logger.setLevel(ch.qos.logback.classic.Level.ERROR);
 
         try {
             WORKING_AREA = new File(Afterburner.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
