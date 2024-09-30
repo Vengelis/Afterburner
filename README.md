@@ -1,6 +1,6 @@
 ![Afterburner Logo](https://i.imgur.com/O6InVVP.png)
 
-![java version](https://badge.ttsalpha.com/api?icon=oracle&label=java-version&status=8-21&color=green&iconColor=green)
+![java version](https://badge.ttsalpha.com/api?icon=oracle&label=java-version&status=11-21&color=green&iconColor=green)
 [![license](https://badge.ttsalpha.com/api?label=license&status=GPL-3.0&color=pink)](https://www.gnu.org/licenses/why-not-lgpl.html)
 ![discord](https://badge.ttsalpha.com/api?icon=discord&label=discord&status=vengelis_&color=purple&iconColor=purple)
 
