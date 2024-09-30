@@ -89,7 +89,6 @@ public class AfterburnerAppCommon {
             ConfigGeneral.PATH_TEMPLATE.setData(paths.get("templates").toString().replace("<space>", " "));
             ConfigGeneral.PATH_WORLDS_BATCHED.setData(paths.get("worlds-batched").toString().replace("<space>", " "));
             ConfigGeneral.PATH_COMMON_FILES.setData(paths.get("common-files").toString().replace("<space>", " "));
-            ConfigGeneral.PATH_JAVA.setData(paths.get("java").toString().replace("<space>", " "));
 
             Map<String, Object> query = (Map<String, Object>) data.get("query");
             ConfigGeneral.QUERY_AUTO_BIND.setData(query.get("host-auto-bind"));
