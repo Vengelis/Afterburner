@@ -1,6 +1,5 @@
 package fr.vengelis.afterburner.cli.command.printer;
 
-import com.sun.org.apache.xpath.internal.operations.Number;
 import fr.vengelis.afterburner.cli.command.printer.impl.*;
 
 import java.util.Collection;
