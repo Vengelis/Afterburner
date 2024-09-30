@@ -43,7 +43,7 @@ public class ManagedProcess {
         stb.append(wrapper.getBaseLauncher()).append(" ")
                 .append(wrapper.getFinalMinimalRam()).append(" ")
                 .append(wrapper.getFinalMaximumRam()).append(" ");
-        for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS_JAVA.getData())) {
+        for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS_ENGINE.getData())) {
             stb.append(" " + s);
         }
         stb.append(wrapper.getFinalExecutable())

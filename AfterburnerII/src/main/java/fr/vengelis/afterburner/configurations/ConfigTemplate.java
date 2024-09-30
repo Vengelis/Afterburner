@@ -5,7 +5,6 @@ import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public enum ConfigTemplate {
 
@@ -17,7 +16,7 @@ public enum ConfigTemplate {
     EXECUTABLE_MIN_RAM(null),
     EXECUTABLE_MAX_RAM(null),
     EXECUTABLE_NAME(null),
-    EXECUTABLE_MORE_ARGS_JAVA(new ArrayList<String>()),
+    EXECUTABLE_MORE_ARGS_ENGINE(new ArrayList<String>()),
     EXECUTABLE_MORE_ARGS_APPLICATION(new ArrayList<String>()),
     SAVE_ENABLED(null),
     SAVE_WORLDS(new HashMap<String, String>()),

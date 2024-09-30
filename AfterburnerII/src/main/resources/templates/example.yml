@@ -60,7 +60,7 @@ executable:
   min-ram: "1G"
   max-ram: "10G"
   exec: "spigot1.8.8.jar"
-  more-args-java: []
+  more-args-engine: []
   more-args-application: []
 
 # #============================================================#
