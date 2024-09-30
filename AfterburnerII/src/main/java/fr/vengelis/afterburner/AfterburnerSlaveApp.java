@@ -216,7 +216,7 @@ public class AfterburnerSlaveApp implements AApp {
             ConfigTemplate.EXECUTABLE_MIN_RAM.setData(exec.get("min-ram"));
             ConfigTemplate.EXECUTABLE_MAX_RAM.setData(exec.get("max-ram"));
             ConfigTemplate.EXECUTABLE_NAME.setData(exec.get("exec"));
-            List<String> moreargslauncher = (List<String>) exec.get("more-args-launcher");
+            List<String> moreargslauncher = (List<String>) exec.get("more-args-engine");
             ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS_ENGINE.getData()).clear();
             for (String s : moreargslauncher) {
                 ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS_ENGINE.getData()).add(s);
