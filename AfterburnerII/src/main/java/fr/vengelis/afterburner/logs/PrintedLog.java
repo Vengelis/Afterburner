@@ -9,7 +9,9 @@ import java.util.logging.Level;
 
 public class PrintedLog {
 
-    private static final Gson gson = new GsonBuilder().create();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Level.class, new LevelTypeAdapter())
+            .create();
 
     private final Level level;
     private final String line;
@@ -51,6 +53,9 @@ public class PrintedLog {
     }
 
     public String serialize() {
+//        ConsoleLogger.printLine(Level.CONFIG, "-------");
+//        ConsoleLogger.printLine(Level.CONFIG, level.getName());
+//        ConsoleLogger.printLine(Level.CONFIG, line);
         return gson.toJson(this);
     }
 
