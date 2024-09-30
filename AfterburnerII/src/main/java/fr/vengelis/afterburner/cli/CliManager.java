@@ -273,6 +273,33 @@ public class CliManager implements PreInitHandler {
                                 .setActionClient(ClientCommandAction::perform)
                                 .build())
                         .build())
+                .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
+                        .setName("broadcaster")
+                        .setDescription("")
+                        .addAlias("bct")
+                        .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
+                                .setName("unstuck")
+                                .setDescription("Unstuck broadcaster call if is automatically locked after max time out request reached")
+                                .addAlias("us")
+                                .setActionServer(args -> {
+                                    AfterburnerSlaveApp.get().getBroadcasterWebApiHandler().resetLocker();
+                                    return new AtbCommand.ExecutionResult<>(true,
+                                            "Broadcaster unlocked");
+                                })
+                                .setActionClient(ClientCommandAction::perform)
+                                .build())
+                        .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
+                                .setName("stop")
+                                .setDescription("Lock broadcaster calls")
+                                .addAlias("s")
+                                .setActionServer(args -> {
+                                    AfterburnerSlaveApp.get().getBroadcasterWebApiHandler().stop();
+                                    return new AtbCommand.ExecutionResult<>(true,
+                                            "Broadcaster locked");
+                                })
+                                .setActionClient(ClientCommandAction::perform)
+                                .build())
+                        .build())
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                         .setName("shutdown")
                         .setDescription("Shutdown afterburner immediately.")
