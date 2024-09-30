@@ -85,7 +85,7 @@ public class BroadcasterWebApiHandler {
             ConsoleLogger.printLine(Level.WARNING, "[Broadcaster] > Request timed out");
             if(attemptCallBroadcasterCount == 10) {
                 attemptCallBroadcasterFailed = true;
-                ConsoleLogger.printStacktrace(e, "[Broadcaster] > Query broadcaster requests was definitely blocked because all requests timed out");
+                ConsoleLogger.printLineBox(Level.SEVERE, "[Broadcaster] > Query broadcaster requests was definitely blocked because all requests timed out");
             }
         } catch (RestClientException e) {
             ConsoleLogger.printStacktrace(e);
@@ -108,6 +108,16 @@ public class BroadcasterWebApiHandler {
         sb.setAvailable(true);
 //        h.sendRequest(sb, Action.ADD, HttpMethod.POST);
         h.sendRequest(sb, Action.LIST, HttpMethod.GET);
+    }
+
+    public void stop() {
+        attemptCallBroadcasterCount = 0;
+        attemptCallBroadcasterFailed = true;
+    }
+
+    public void resetLocker() {
+        attemptCallBroadcasterCount = 0;
+        attemptCallBroadcasterFailed = false;
     }
 
 }
