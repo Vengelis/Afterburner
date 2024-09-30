@@ -186,11 +186,4 @@ public class SocketEmbarkedClient {
         return clientInformations;
     }
 
-    public static void main(String[] args) {
-        SocketEmbarkedClient client = new SocketEmbarkedClient("192.168.0.100", 46798);
-        try {
-            client.start();
-        } catch (Exception ignored) {
-        }
-    }
 }
