@@ -32,7 +32,6 @@ paths:
   templates: "/path/template"
   worlds-batched: "/path/world/batched"
   common-files: "/path/storage/common/files"
-  java: "/path/java/version" #Mettre juste : "java" pour utiliser la version par défaut des CT (java 8)
 
 # #============================================================#
 # |                  Query Console settings                    |

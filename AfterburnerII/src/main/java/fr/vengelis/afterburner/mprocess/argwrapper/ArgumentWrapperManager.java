@@ -2,8 +2,7 @@ package fr.vengelis.afterburner.mprocess.argwrapper;
 
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.handler.PreInitHandler;
-import fr.vengelis.afterburner.mprocess.argwrapper.impl.JavaArguments;
-import fr.vengelis.afterburner.mprocess.argwrapper.impl.SimpleArguments;
+import fr.vengelis.afterburner.mprocess.argwrapper.impl.*;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 
@@ -26,6 +25,9 @@ public class ArgumentWrapperManager implements PreInitHandler {
         alreadyInit = true;
         register(new JavaArguments());
         register(new SimpleArguments());
+        register(new BashArguments());
+        register(new ShArguments());
+        register(new PythonArguments());
     }
 
     public void register(BaseArgumentWrapper wrapper) {
