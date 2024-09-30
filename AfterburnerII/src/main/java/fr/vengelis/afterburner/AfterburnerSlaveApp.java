@@ -95,6 +95,9 @@ public class AfterburnerSlaveApp implements AApp {
             AfterburnerAppCommon.exportRessources(this);
             exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "templates");
             if(!Afterburner.DISABLE_TEST_TEMPLATE) exporter.saveResource(new File(Afterburner.WORKING_AREA), "/templates/example.yml", false);
+
+            exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "wrapper" + File.separator + "arg-starter");
+
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(e);
             System.exit(1);
@@ -213,10 +216,15 @@ public class AfterburnerSlaveApp implements AApp {
             ConfigTemplate.EXECUTABLE_MIN_RAM.setData(exec.get("min-ram"));
             ConfigTemplate.EXECUTABLE_MAX_RAM.setData(exec.get("max-ram"));
             ConfigTemplate.EXECUTABLE_NAME.setData(exec.get("exec"));
-            List<String> moreargs = (List<String>) exec.get("more-args");
-            ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS.getData()).clear();
-            for (String s : moreargs) {
-                ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS.getData()).add(s);
+            List<String> moreargsjava = (List<String>) exec.get("more-args-java");
+            ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS_JAVA.getData()).clear();
+            for (String s : moreargsjava) {
+                ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS_JAVA.getData()).add(s);
+            }
+            List<String> moreargsapp = (List<String>) exec.get("more-args-application");
+            ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS_APPLICATION.getData()).clear();
+            for (String s : moreargsapp) {
+                ((List<String>)ConfigTemplate.EXECUTABLE_MORE_ARGS_APPLICATION.getData()).add(s);
             }
 
             Map<String, Object> save = (Map<String, Object>) data.get("save");

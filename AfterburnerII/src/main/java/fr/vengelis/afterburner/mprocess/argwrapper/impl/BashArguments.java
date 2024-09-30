@@ -1,31 +1,30 @@
 package fr.vengelis.afterburner.mprocess.argwrapper.impl;
 
-import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.mprocess.argwrapper.BaseArgumentWrapper;
 
-public class JavaArguments extends BaseArgumentWrapper {
+public class BashArguments extends BaseArgumentWrapper {
 
-    public JavaArguments() {
-        super(false);
+    public BashArguments() {
+        super(true);
     }
 
     @Override
     public String getType() {
-        return "java";
+        return "bash";
     }
 
     @Override
     protected String getPrefixMinimalRam() {
-        return "-Xms";
+        return "";
     }
 
     @Override
     protected String getPrefixMaximumRam() {
-        return "-Xmx";
+        return "";
     }
 
     @Override
     protected String getPrefixExecutable() {
-        return "-jar";
+        return "";
     }
 }

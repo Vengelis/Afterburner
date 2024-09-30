@@ -24,7 +24,6 @@ public enum ConfigGeneral {
     PATH_TEMPLATE(null),
     PATH_WORLDS_BATCHED(null),
     PATH_COMMON_FILES(null),
-    PATH_JAVA(null),
 
     QUERY_AUTO_BIND(null),
     QUERY_HOST(null),

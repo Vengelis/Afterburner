@@ -10,7 +10,7 @@
 #  your old afterburner configuration files
 
 #  DON'T TOUCH THIS !!!
-config-version: 1
+config-version: 2
 
 # #============================================================#
 # |                    Pattern settings                        |
@@ -60,7 +60,8 @@ executable:
   min-ram: "1G"
   max-ram: "10G"
   exec: "spigot1.8.8.jar"
-  more-args: []
+  more-args-java: []
+  more-args-application: []
 
 # #============================================================#
 # |                  World saver settings                      |

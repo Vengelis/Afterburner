@@ -1,31 +1,30 @@
 package fr.vengelis.afterburner.mprocess.argwrapper.impl;
 
-import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.mprocess.argwrapper.BaseArgumentWrapper;
 
-public class JavaArguments extends BaseArgumentWrapper {
+public class PythonArguments extends BaseArgumentWrapper {
 
-    public JavaArguments() {
-        super(false);
+    public PythonArguments() {
+        super(true);
     }
 
     @Override
     public String getType() {
-        return "java";
+        return "python";
     }
 
     @Override
     protected String getPrefixMinimalRam() {
-        return "-Xms";
+        return "";
     }
 
     @Override
     protected String getPrefixMaximumRam() {
-        return "-Xmx";
+        return "";
     }
 
     @Override
     protected String getPrefixExecutable() {
-        return "-jar";
+        return "";
     }
 }
