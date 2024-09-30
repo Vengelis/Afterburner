@@ -43,13 +43,17 @@ public class ManagedProcess {
         stb.append(wrapper.getBaseLauncher()).append(" ")
                 .append(wrapper.getFinalMinimalRam()).append(" ")
                 .append(wrapper.getFinalMaximumRam()).append(" ");
-        for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS.getData())) {
+        for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS_JAVA.getData())) {
             stb.append(" " + s);
         }
         stb.append(wrapper.getFinalExecutable())
                 .append(" DafterbunerUuid=" + uniqueId)
                 .append(" Djobid=" + AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
                 .append(" DserverOwner=" + AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
+
+        for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS_APPLICATION.getData())) {
+            stb.append(" " + s);
+        }
 
         ExecutableEvent event = new ExecutableEvent(stb);
         AfterburnerSlaveApp.get().getEventManager().call(event);
