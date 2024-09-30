@@ -13,7 +13,6 @@ import fr.vengelis.afterburner.providers.ProviderManager;
 import fr.vengelis.afterburner.runnables.RunnableManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.ResourceExporter;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.yaml.snakeyaml.Yaml;
@@ -26,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 @SpringBootApplication
