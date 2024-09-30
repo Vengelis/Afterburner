@@ -23,14 +23,13 @@ dependencies {
     implementation(group: 'org.springframework', name: 'spring-web', version: '5.2.8.RELEASE')
     implementation(group: 'org.springframework', name: 'spring-core', version: '5.2.8.RELEASE')
     implementation(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.3.4.RELEASE')
-    implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
 compileJava.getOptions().setEncoding("UTF-8")
 
 compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 
