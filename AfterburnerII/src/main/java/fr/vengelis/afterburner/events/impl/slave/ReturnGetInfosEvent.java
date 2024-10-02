@@ -1,7 +1,8 @@
 package fr.vengelis.afterburner.events.impl.slave;
 
 import com.google.gson.JsonObject;
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 
 /**
  * This class represents the ReturnGetInfosEvent event in the application.
@@ -22,8 +23,9 @@ import fr.vengelis.afterburner.events.AbstractCancelableEvent;
  *     <li>getDatas(): This method returns the current state of the 'datas' property.</li>
  * </ul>
  */
-public class ReturnGetInfosEvent extends AbstractCancelableEvent {
+public class ReturnGetInfosEvent extends AbstractEvent implements CancellableEvent {
     private final JsonObject datas;
+    private boolean cancelled = false;
 
     /**
      * This constructor initializes the 'datas' property.
@@ -39,5 +41,15 @@ public class ReturnGetInfosEvent extends AbstractCancelableEvent {
      */
     public JsonObject getDatas() {
         return datas;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 }

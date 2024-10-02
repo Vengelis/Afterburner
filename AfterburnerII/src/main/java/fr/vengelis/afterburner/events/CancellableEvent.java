@@ -13,23 +13,17 @@ package fr.vengelis.afterburner.events;
  *     <li>setCancelled(boolean cancelled): This method is used to set the 'cancelled' state of the event.</li>
  * </ul>
  */
-public abstract class AbstractCancelableEvent extends AbstractEvent{
-
-    private boolean cancelled = false;
+public interface CancellableEvent {
 
     /**
      * This method is used to check if the event is cancelled.
      * @return boolean
      */
-    public boolean isCancelled() {
-        return cancelled;
-    }
+    boolean isCancelled();
 
     /**
      * This method is used to set the 'cancelled' state of the event.
      * @param cancelled boolean
      */
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+    void setCancelled(boolean cancelled);
 }

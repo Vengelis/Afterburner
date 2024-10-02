@@ -1,6 +1,7 @@
 package fr.vengelis.afterburner.events.impl.common;
 
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 import fr.vengelis.afterburner.logs.PrintedLog;
 
 /**
@@ -22,10 +23,21 @@ import fr.vengelis.afterburner.logs.PrintedLog;
  *     <li>getLog(): This method returns the current state of the 'log' property.</li>
  * </ul>
  */
-public class PrintedLogEvent extends AbstractCancelableEvent {
+public class PrintedLogEvent extends AbstractEvent implements CancellableEvent {
 
     private final PrintedLog log;
     private final Handler handler;
+    private boolean cancelled = false;
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 
 
     public enum Handler {

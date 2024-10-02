@@ -1,7 +1,8 @@
 package fr.vengelis.afterburner.events.impl.slave;
 
 import com.google.gson.JsonObject;
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 
 /**
  * This class represents the KillTaskEvent in the application.
@@ -25,9 +26,10 @@ import fr.vengelis.afterburner.events.AbstractCancelableEvent;
  *     <li>getMessage(): This method returns the current state of the 'message' property.</li>
  * </ul>
  */
-public class KillTaskEvent extends AbstractCancelableEvent {
+public class KillTaskEvent extends AbstractEvent implements CancellableEvent {
     private boolean shutdownAfterburner = false;
     private final JsonObject message;
+    private boolean cancelled = false;
 
     /**
      * This constructor initializes both the 'shutdownAfterburner' and 'message' properties.
@@ -61,5 +63,15 @@ public class KillTaskEvent extends AbstractCancelableEvent {
      */
     public JsonObject getMessage() {
         return message;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 }

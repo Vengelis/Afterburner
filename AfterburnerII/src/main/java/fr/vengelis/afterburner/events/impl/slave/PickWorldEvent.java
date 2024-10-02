@@ -1,6 +1,7 @@
 package fr.vengelis.afterburner.events.impl.slave;
 
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 
 import java.io.File;
 
@@ -26,8 +27,9 @@ import java.io.File;
  *     <li>setPickedWorld(File pickedWorld): This method sets a new state for the 'pickedWorld' property.</li>
  * </ul>
  */
-public class PickWorldEvent extends AbstractCancelableEvent {
+public class PickWorldEvent extends AbstractEvent implements CancellableEvent {
     private File pickedWorld;
+    private boolean cancelled = false;
 
     /**
      * This constructor initializes the 'pickedWorld' property.
@@ -51,5 +53,15 @@ public class PickWorldEvent extends AbstractCancelableEvent {
      */
     public void setPickedWorld(File pickedWorld) {
         this.pickedWorld = pickedWorld;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 }

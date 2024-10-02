@@ -1,6 +1,7 @@
 package fr.vengelis.afterburner.events.impl.slave;
 
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 
 /**
  * This class represents the RequestGetInfosEvent event in the application.
@@ -8,5 +9,17 @@ import fr.vengelis.afterburner.events.AbstractCancelableEvent;
  * <p>
  * The RequestGetInfosEvent class is used to represent the request get infos event in the application.
  */
-public class RequestGetInfosEvent extends AbstractCancelableEvent {
+public class RequestGetInfosEvent extends AbstractEvent implements CancellableEvent {
+
+    private boolean cancelled = false;
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 }

@@ -89,7 +89,7 @@ public class ManagedProcess {
                 while ((line = br.readLine()) != null) {
                     PrintedLog log = new PrintedLog(line);
                     PrintedLogEvent event1 = new PrintedLogEvent(log, PrintedLogEvent.Handler.PROCESS);
-                    AfterburnerSlaveApp.get().getEventManager().call(event);
+                    AfterburnerSlaveApp.get().getEventManager().call(event1);
                     if(event1.isCancelled()) {
                         log.setSkip(true).save();
                         continue;

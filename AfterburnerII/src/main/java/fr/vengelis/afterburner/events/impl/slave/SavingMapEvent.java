@@ -1,6 +1,7 @@
 package fr.vengelis.afterburner.events.impl.slave;
 
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 
 /**
  * This class represents the SavingMapEvent in the application.
@@ -29,11 +30,12 @@ import fr.vengelis.afterburner.events.AbstractCancelableEvent;
  *     <li>setModifiedName(String modifiedName): This method updates the state of the 'modifiedName' property.</li>
  * </ul>
  */
-public class SavingMapEvent extends AbstractCancelableEvent {
+public class SavingMapEvent extends AbstractEvent implements CancellableEvent {
 
     private String initialName;
     private String destination;
     private String modifiedName;
+    private boolean cancelled = false;
 
     /**
      * This constructor initializes the 'initialName', 'destination', and 'modifiedName' properties.
@@ -93,5 +95,15 @@ public class SavingMapEvent extends AbstractCancelableEvent {
      */
     public void setModifiedName(String modifiedName) {
         this.modifiedName = modifiedName;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 }

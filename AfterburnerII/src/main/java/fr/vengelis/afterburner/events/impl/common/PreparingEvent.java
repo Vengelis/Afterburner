@@ -1,14 +1,16 @@
 package fr.vengelis.afterburner.events.impl.common;
 
-import fr.vengelis.afterburner.events.AbstractCancelableEvent;
+import fr.vengelis.afterburner.events.AbstractEvent;
+import fr.vengelis.afterburner.events.CancellableEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PreparingEvent extends AbstractCancelableEvent {
+public class PreparingEvent extends AbstractEvent implements CancellableEvent {
 
     private List<SlavePreparingStep> skipStep = new ArrayList<>();
     private final Stage stage;
+    private boolean cancelled = false;
 
     public PreparingEvent(Stage stage) {
         this.stage = stage;
@@ -24,6 +26,16 @@ public class PreparingEvent extends AbstractCancelableEvent {
 
     public Stage getStage() {
         return stage;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 
     public enum SlavePreparingStep {
