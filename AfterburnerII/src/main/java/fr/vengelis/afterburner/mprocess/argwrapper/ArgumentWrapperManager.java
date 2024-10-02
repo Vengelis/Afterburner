@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.logging.Level;
 
+import static fr.vengelis.afterburner.Afterburner.VERBOSE;
+
 public class ArgumentWrapperManager implements PreInitHandler {
 
     private final HashMap<String, BaseArgumentWrapper> argumentWrapperMap = new HashMap<>();
@@ -35,7 +37,8 @@ public class ArgumentWrapperManager implements PreInitHandler {
             wrapper.export();
             wrapper.load();
             argumentWrapperMap.put(wrapper.getType(), wrapper);
-            ConsoleLogger.printLine(Level.INFO, "Registering new Argument Wrapper '" + wrapper.getType() + "'");
+            if(VERBOSE)
+                ConsoleLogger.printLine(Level.INFO, "Registering new Argument Wrapper '" + wrapper.getType() + "'");
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(new BrokenConfigException(e));
         }

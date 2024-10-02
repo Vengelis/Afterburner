@@ -78,7 +78,7 @@ public class AfterburnerAppCommon {
 
     public static void loadGeneralConfig(AApp app) {
         try {
-            ConsoleLogger.printLine(Level.INFO, "Loading configurations");
+            ConsoleLogger.printLine(Level.INFO, "Loading generals configurations");
 
             // General Config
             File config = new File(Afterburner.WORKING_AREA + File.separator + "config.yml");
@@ -141,7 +141,7 @@ public class AfterburnerAppCommon {
                 ((HashMap<ProviderInstructions, IAfterburnerProvider>) ConfigGeneral.PROVIDERS.getData()).put(providerInstructions, provider1);
             }
 
-            if(Afterburner.VERBOSE_PROVIDERS) {
+            if(Afterburner.VERBOSE) {
                 for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
                     ConsoleLogger.printLine(Level.CONFIG, "Verbose provider result : instruction : " + providerInstructions.name() + " - result : " + app.getProviderManager().getResultInstruction(providerInstructions));
                 }

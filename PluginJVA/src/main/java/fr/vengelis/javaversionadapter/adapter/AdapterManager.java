@@ -7,12 +7,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 
+import static fr.vengelis.afterburner.Afterburner.VERBOSE;
+
 public class AdapterManager {
 
     private final Map<String, Adapter> adapterMap = new HashMap<>();
 
     public void register(Adapter adapter) {
-        ConsoleLogger.printLine(Level.INFO, "Registering new java adapter : " + adapter.getName());
+        if(VERBOSE)
+            ConsoleLogger.printLine(Level.INFO, "Registering new java adapter : " + adapter.getName());
         adapterMap.put(adapter.getName(), adapter);
     }
 

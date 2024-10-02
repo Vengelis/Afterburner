@@ -1,10 +1,6 @@
 package fr.vengelis.afterburner.interconnection.socket.broadcaster;
 
-import fr.vengelis.afterburner.AfterburnerSlaveApp;
-import fr.vengelis.afterburner.AfterburnerState;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
-import fr.vengelis.afterburner.events.impl.slave.SendUpdateBroadcasterEvent;
-import fr.vengelis.afterburner.runnables.impl.slave.SBRunnable;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,10 +13,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import static fr.vengelis.afterburner.Afterburner.VERBOSE_PROVIDERS;
+import static fr.vengelis.afterburner.Afterburner.VERBOSE;
 
 public class BroadcasterWebApiHandler {
 
@@ -85,7 +80,7 @@ public class BroadcasterWebApiHandler {
             ResponseEntity<String> response = restTemplate.exchange(url + action.getRoute(), method, request, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                if(VERBOSE_PROVIDERS) {
+                if(VERBOSE) {
                     ConsoleLogger.printLine(Level.INFO, "[Broadcaster] > Action '" + action.name() + "' successfully performed");
                     ConsoleLogger.printLine(Level.INFO, response.getBody());
                     attemptCallBroadcasterCount = 0;

@@ -23,7 +23,7 @@ public class Afterburner {
 
     public static String WORKING_AREA;
     public static boolean DISABLE_TEST_TEMPLATE = false;
-    public static boolean VERBOSE_PROVIDERS = false;
+    public static boolean VERBOSE = false;
     private static boolean DEFAULT_DISPLAY_PROGRAM_OUTPUT = true;
     private static LaunchType LAUNCH_TYPE = LaunchType.SLAVE;
 
@@ -70,10 +70,10 @@ public class Afterburner {
                 if(DISABLE_TEST_TEMPLATE) {
                     ConsoleLogger.printLine(Level.CONFIG, "Example template ('templates/example.yml') was disabled");
                 }
-            } else if (arg.startsWith("DverboseProviders=")) {
-                VERBOSE_PROVIDERS = Boolean.parseBoolean(arg.substring("DverboseProviders=".length()).replace("\"", ""));
-                if(VERBOSE_PROVIDERS) {
-                    ConsoleLogger.printLine(Level.CONFIG, "Verbose provider results");
+            } else if (arg.startsWith("Dverbose=")) {
+                VERBOSE = Boolean.parseBoolean(arg.substring("Dverbose=".length()).replace("\"", ""));
+                if(VERBOSE) {
+                    ConsoleLogger.printLine(Level.CONFIG, "Verbose results");
                 }
             } else if (arg.startsWith("--no-default-output") || arg.startsWith("-ndo")) {
                 DEFAULT_DISPLAY_PROGRAM_OUTPUT = false;
