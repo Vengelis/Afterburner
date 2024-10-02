@@ -386,6 +386,10 @@ public class AfterburnerSlaveApp implements AApp {
             ConsoleLogger.printLine(Level.WARNING, "A problem occurred before or during program execution. Afterburner forced to stop.");
             System.exit(1);
         }
+
+        // Send post executable event
+        ExecutableEvent event = new ExecutableEvent();
+        AfterburnerSlaveApp.get().getEventManager().call(event);
     }
 
     @Override

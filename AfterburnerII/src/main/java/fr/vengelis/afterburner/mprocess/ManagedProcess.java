@@ -55,7 +55,7 @@ public class ManagedProcess {
             stb.append(" " + s);
         }
 
-        ExecutableEvent event = new ExecutableEvent(stb);
+        ExecutableEvent event = new ExecutableEvent(wrapper, stb, ExecutableEvent.Stage.PRE);
         AfterburnerSlaveApp.get().getEventManager().call(event);
 
         ConsoleLogger.printLine(Level.INFO, "Final built java command : " + event.getCmdline());
