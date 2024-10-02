@@ -386,8 +386,6 @@ public class AfterburnerSlaveApp implements AApp {
             ConsoleLogger.printLine(Level.WARNING, "A problem occurred before or during program execution. Afterburner forced to stop.");
             System.exit(1);
         }
-
-        eventManager.call(new ExecutableEvent());
     }
 
     @Override
@@ -415,8 +413,10 @@ public class AfterburnerSlaveApp implements AApp {
         } else {
             ConsoleLogger.printLine(Level.INFO, "Map saver disabled");
         }
-        ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
-        shutdown();
+        if(!isReprepareEnabled()) {
+            ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
+            shutdown();
+        }
     }
 
     public boolean killTask() {

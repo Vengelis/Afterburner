@@ -13,7 +13,7 @@ public class CommandResultReader {
         if (data != null) {
             IConsolePrinter<Object> printer = (IConsolePrinter<Object>) ConsolePrinterFactory.getPrinter(data.getClass());
             if (printer != null) {
-                printer.print(data);
+                printer.print(data.toString());
             } else {
                 ConsoleLogger.printLine(Level.WARNING, "No printer found for class: " + data.getClass().getName());
             }
