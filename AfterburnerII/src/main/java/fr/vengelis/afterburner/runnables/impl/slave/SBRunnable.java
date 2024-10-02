@@ -4,9 +4,11 @@ import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.AfterburnerState;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.BroadcasterWebApiHandler;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast;
+import fr.vengelis.afterburner.utils.ConsoleLogger;
 import org.springframework.http.HttpMethod;
 
 import java.time.Instant;
+import java.util.logging.Level;
 
 public class SBRunnable implements Runnable{
 
@@ -28,6 +30,7 @@ public class SBRunnable implements Runnable{
         } else if(!s.equals(AfterburnerState.ENDING) && !shutdown) {
             SlaveBroadcast sb = AfterburnerSlaveApp.get().getSlaveBroadcast();
             sb.setLastContact(Instant.now().getEpochSecond());
+            sb.setState(s);
             AfterburnerSlaveApp.get().getBroadcasterWebApiHandler().sendRequest(
                     sb,
                     BroadcasterWebApiHandler.Action.UPDATE,

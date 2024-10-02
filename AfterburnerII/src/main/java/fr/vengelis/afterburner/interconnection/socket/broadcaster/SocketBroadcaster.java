@@ -100,6 +100,7 @@ public class SocketBroadcaster {
                     .findFirst().get();
             inded.setAvailable(sb.isAvailable());
             inded.setLastContact(sb.getLastContact());
+            inded.setState(sb.getState());
             return new ResponseEntity<>("Client updated", HttpStatus.OK);
         }
     }

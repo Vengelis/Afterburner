@@ -285,6 +285,7 @@ public class AfterburnerSlaveApp implements AApp {
             );
             slaveBroadcast.setAvailable(false);
             slaveBroadcast.setLastContact(Instant.now().getEpochSecond());
+            slaveBroadcast.setState(AfterburnerState.INITIALIZING);
 
             broadcasterWebApiHandler = new BroadcasterWebApiHandler(
                     ((boolean) ConfigGeneral.QUERY_BROADCASTER_HTTPS.getData() ? "https" : "http") +
