@@ -78,7 +78,7 @@ public class AfterburnerClientApp implements AApp{
             client.start();
         } catch (Exception ignored) {
         }
-        eventManager.call(new ExecutableEvent(new StringBuilder()));
+        eventManager.call(new ExecutableEvent(null, new StringBuilder()));
     }
 
     @Override

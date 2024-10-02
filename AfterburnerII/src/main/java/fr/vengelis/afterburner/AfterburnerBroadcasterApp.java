@@ -112,7 +112,7 @@ public class AfterburnerBroadcasterApp implements AApp{
 
     @Override
     public void execute() {
-        eventManager.call(new ExecutableEvent(new StringBuilder()));
+        eventManager.call(new ExecutableEvent(null, new StringBuilder()));
         SpringApplication spa = new SpringApplication(AfterburnerBroadcasterApp.class);
         spa.setDefaultProperties(Collections.singletonMap("server.port", ConfigBroadcaster.API_PORT.getData()));
         spa.run();
