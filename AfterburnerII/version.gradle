@@ -45,68 +45,110 @@ ext.loadVersion = { ->
 
 }
 
-def updateVersionFile(versionFile, updates) {
-    ant.propertyfile(file: versionFile) {
-        updates.each { key, value ->
-            entry(key: key, type: 'int', operation: value.operation, value: value.value)
-        }
-    }
-}
-
-def writeVersionToFile(version) {
-    new File('publishedversion.txt').text = version
-}
-
 task majorVersionUpdate(group: 'versioning', description: 'Bump to next major version') {
     doFirst {
-        updateVersionFile('version.properties', [major: [operation: '+', value: 1], minor: [operation: '=', value: 0], build: [operation: '=', value: 0], patch: [operation: '=', value: 0]])
+        def versionFile = file('version.properties')
+        ant.propertyfile(file: versionFile) {
+            entry(key: 'major', type: 'int', operation: '+', value: 1)
+            entry(key: 'minor', type: 'int', operation: '=', value: 0)
+            entry(key: 'build', type: 'int', operation: '=', value: 0)
+            entry(key: 'patch', type: 'int', operation: '=', value: 0)
+        }
     }
     doLast {
-        writeVersionToFile(project.loadVersion().getVersion())
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+        new File('publishedversion.txt').text = version
     }
 }
 
 task minorVersionUpdate(group: 'versioning', description: 'Bump to next minor version') {
     doFirst {
-        updateVersionFile('version.properties', [minor: [operation: '+', value: 1], build: [operation: '=', value: 0], patch: [operation: '=', value: 0]])
+        def versionFile = file('version.properties')
+        ant.propertyfile(file: versionFile) {
+            entry(key: 'minor', type: 'int', operation: '+', value: 1)
+            entry(key: 'build', type: 'int', operation: '+', value: 0)
+            entry(key: 'patch', type: 'int', operation: '=', value: 0)
+        }
     }
     doLast {
-        writeVersionToFile(project.loadVersion().getVersion())
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+        new File('publishedversion.txt').text = version
     }
 }
 
-task buildVersionUpdate(group: 'versioning', description: 'Bump to next build version') {
+task buildVersionUpdate(group: 'versioning', description: 'Bump to next minor version') {
     doFirst {
-        updateVersionFile('version.properties', [build: [operation: '+', value: 1], patch: [operation: '=', value: 0]])
+        def versionFile = file('version.properties')
+        ant.propertyfile(file: versionFile) {
+            entry(key: 'build', type: 'int', operation: '+', value: 1)
+            entry(key: 'patch', type: 'int', operation: '=', value: 0)
+        }
     }
     doLast {
-        writeVersionToFile(project.loadVersion().getVersion())
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+        new File('publishedversion.txt').text = version
     }
 }
 
 task patchVersionUpdate(group: 'versioning', description: 'Bump to next patch version') {
     doFirst {
-        updateVersionFile('version.properties', [patch: [operation: '+', value: 1]])
+        def versionFile = file('version.properties')
+        ant.propertyfile(file: versionFile) {
+            entry(key: 'patch', type: 'int', operation: '+', value: 1)
+        }
     }
     doLast {
-        writeVersionToFile(project.loadVersion().getVersion())
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+        new File('publishedversion.txt').text = version
     }
 }
 
 task releaseVersion(group: 'versioning', description: 'Make the version a release') {
     doFirst {
-        updateVersionFile('version.properties', [release: [operation: '=', value: 'true']])
+        def versionFile = file('version.properties')
+        ant.propertyfile(file: versionFile) {
+            entry(key: 'release', type: 'string', operation: '=', value: 'true')
+        }
     }
     doLast {
-        writeVersionToFile(project.loadVersion().getVersion())
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+        new File('publishedversion.txt').text = version
     }
 }
 
 task preReleaseVersion(group: 'versioning', description: 'Make the version a pre release') {
     doFirst {
-        updateVersionFile('version.properties', [release: [operation: '=', value: 'false']])
+        def versionFile = file('version.properties')
+        ant.propertyfile(file: versionFile) {
+            entry(key: 'release', type: 'string', operation: '=', value: 'false')
+        }
     }
     doLast {
-        writeVersionToFile(project.loadVersion().getVersion())
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+        new File('publishedversion.txt').text = version
     }
 }
