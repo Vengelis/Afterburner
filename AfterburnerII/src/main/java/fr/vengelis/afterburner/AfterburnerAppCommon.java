@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.configurations.AsConfig;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
+import fr.vengelis.afterburner.events.impl.common.LoadEvent;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.exceptions.ProviderUnknownInstructionException;
 import fr.vengelis.afterburner.exceptions.UnknownProviderException;
@@ -72,6 +73,7 @@ public class AfterburnerAppCommon {
                 }
             }
         });
+        app.getEventManager().call(new LoadEvent());
     }
 
     public static void loadGeneralConfig(AApp app) {
