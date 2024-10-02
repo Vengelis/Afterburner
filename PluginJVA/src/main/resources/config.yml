@@ -1,7 +1,6 @@
+# This plugin will allow you to adapt the version of Java to be executed in the managed process depending on the name of the machine.
+# This is useful if you want to run programs that require a particular version of Java if you have multiple versions installed on your infrastructure.
 adapter:
-  - name: "Java8"
-    trigger-name: "^\\UP[0-9]+-[A-Za-z0-9]+"
-    java-exec-command: "java"
-  - name: "Java21"
-    trigger-name: "^\\RP[0-9]+-[A-Za-z0-9]+"
-    java-exec-command: "/tools/java/jdk-21/bin/java"
+  - name: "Java8"                             # Adapter name
+    trigger-name: "^\\UP[0-9]+-[A-Za-z0-9]+"  # Machine name that will be detected to apply the adapter
+    java-exec-command: "java"                 # destination path of the java executable (or command line)
