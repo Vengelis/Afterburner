@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
+import fr.vengelis.afterburner.utils.LevelTypeAdapter;
 
 import java.util.logging.Level;
 

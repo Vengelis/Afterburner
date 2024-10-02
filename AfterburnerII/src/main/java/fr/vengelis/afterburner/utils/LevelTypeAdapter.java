@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.logs;
+package fr.vengelis.afterburner.utils;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
