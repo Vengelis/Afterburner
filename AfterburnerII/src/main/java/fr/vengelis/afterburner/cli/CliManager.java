@@ -212,7 +212,7 @@ public class CliManager implements PreInitHandler {
                         .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
                                 .setName("edit")
                                 .setDescription("Enable or disable common file - Command : atb cf edit <common file name> <setting> <true/false>")
-                                .requiresArgument()
+                                .requiresArgument("Error: Command : atb cf edit <common file name> <setting> <true/false>")
                                 .setActionServer(arg -> {
                                     if(arg.getArgs().length < 3)
                                         return new AtbCommand.ExecutionResult<>(false,
@@ -245,7 +245,7 @@ public class CliManager implements PreInitHandler {
                         .setName("reprepare")
                         .setDescription("Resumes the process after the previous one ends.")
                         .addAlias("rep")
-                        .requiresArgument()
+                        .requiresArgument("Error: This command requires a reason message.")
                         .setActionServer(arg -> {
                             boolean rtn = new ReprepareInstruction(String.join(" ", arg.getArgs())).execute();
                             return new AtbCommand.ExecutionResult<>(rtn,

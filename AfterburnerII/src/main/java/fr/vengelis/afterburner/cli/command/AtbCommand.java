@@ -16,6 +16,7 @@ public class AtbCommand {
     private final State commandeState;
     private Set<String> aliases = new HashSet<>();
     private boolean requiresArgument = false;
+    private String helpMessage = null;
 
     public enum CommandSide {
         CLIENT,
@@ -56,6 +57,7 @@ public class AtbCommand {
         private Set<String> aliases = new HashSet<>();
         private Map<String, AtbCommand> subCommands = new HashMap<>();
         private boolean requiresArgument = false;
+        private String helpMessage = null;
 
         public AtbCommandBuilder(State commandeState) {
             this.commandeState = commandeState;
@@ -97,7 +99,12 @@ public class AtbCommand {
         }
 
         public AtbCommandBuilder requiresArgument() {
+            return requiresArgument(null);
+        }
+
+        public AtbCommandBuilder requiresArgument(String helpMessage) {
             this.requiresArgument = true;
+            this.helpMessage = helpMessage;
             return this;
         }
 
@@ -105,6 +112,7 @@ public class AtbCommand {
             AtbCommand command = new AtbCommand(name, description, commandeState);
             command.setActionServer(actionServer);
             command.setActionClient(actionClient);
+            command.setHelpMessage(helpMessage);
             aliases.forEach(command::addAlias);
             subCommands.values().forEach(command::addSubCommand);
             command.setRequiresArgument(this.requiresArgument);
@@ -158,6 +166,14 @@ public class AtbCommand {
         this.requiresArgument = requiresArgument;
     }
 
+    public String getHelpMessage() {
+        return helpMessage;
+    }
+
+    public void setHelpMessage(String helpMessage) {
+        this.helpMessage = helpMessage;
+    }
+
     private String[] shiftArgs(String[] args) {
         if (args.length <= 1) {
             return new String[0];
@@ -169,12 +185,16 @@ public class AtbCommand {
 
     public CommandResult<?> execute(CommandInstruction instruction) {
         if (requiresArgument && (instruction.getArgs() == null || instruction.getArgs().length == 0)) {
-            String rtn = "Error: This command requires an argument.";
+            String rtn;
+            if(helpMessage != null)
+                rtn = helpMessage;
+            else
+                rtn = "Error: This command requires an argument.";
             ConsoleLogger.printLine(Level.SEVERE, rtn);
             return new CommandResult<>(
                     instruction,
                     CommandResult.ResponseType.ERROR,
-                    new ExecutionResult<>(false, "Error: This command requires an argument.")
+                    new ExecutionResult<>(false, rtn)
             );
         }
 
