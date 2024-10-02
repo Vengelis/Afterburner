@@ -63,6 +63,14 @@ public class AfterburnerAppCommon {
             } catch (Exception e) {
                 ConsoleLogger.printStacktrace(e);
             }
+            if(p instanceof AsConfig) {
+                try {
+                    ConsoleLogger.printLine(Level.INFO, "Loading '" + n + "' plugin configuration");
+                    ((AsConfig) p).loadConfig();
+                } catch (Exception e) {
+                    ConsoleLogger.printStacktrace(e);
+                }
+            }
         });
     }
 
