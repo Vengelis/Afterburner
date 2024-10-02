@@ -1,0 +1,7 @@
+adapter:
+  - name: "Java8"
+    trigger-name: "^\\UP[0-9]+-[A-Za-z0-9]+"
+    java-exec-command: "java"
+  - name: "Java21"
+    trigger-name: "^\\RP[0-9]+-[A-Za-z0-9]+"
+    java-exec-command: "/tools/java/jdk-21/bin/java"
