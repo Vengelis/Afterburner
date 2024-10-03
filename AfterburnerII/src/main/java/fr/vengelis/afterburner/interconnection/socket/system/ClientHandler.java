@@ -77,7 +77,7 @@ public class ClientHandler implements Runnable {
                         if(!inputLine.trim().isEmpty()) {
                             CommandResult<?> rtn = AfterburnerSlaveApp.get().getCliManager().execute(inputLine, AtbCommand.CommandSide.SERVER);
                             CommandResultReader.read(rtn);
-                            AfterburnerSlaveApp.get().getSocketServer().sendAllClient("Echo: " + rtn.serialize());
+                            AfterburnerSlaveApp.get().getSocketServer().sendAllClient("Echo:Type=" + rtn.getResponseData().getResponseData().getClass().getName() + "---ATBSPLITER---" + rtn.serialize());
                         } else {
                             out.println("Echo: No command entered. Please try again.");
                         }

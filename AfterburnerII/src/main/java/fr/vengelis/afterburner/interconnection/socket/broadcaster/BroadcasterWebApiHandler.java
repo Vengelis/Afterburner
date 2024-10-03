@@ -1,6 +1,8 @@
 package fr.vengelis.afterburner.interconnection.socket.broadcaster;
 
+import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
+import fr.vengelis.afterburner.events.impl.slave.SendUpdateBroadcasterEvent;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -76,7 +78,7 @@ public class BroadcasterWebApiHandler {
         HttpEntity<String> request = new HttpEntity<>(slaveBroadcast.toJson(), headers);
 
         try {
-//            AfterburnerSlaveApp.get().getEventManager().call(new SendUpdateBroadcasterEvent(slaveBroadcast));
+            AfterburnerSlaveApp.get().getEventManager().call(new SendUpdateBroadcasterEvent(slaveBroadcast));
             ResponseEntity<String> response = restTemplate.exchange(url + action.getRoute(), method, request, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {

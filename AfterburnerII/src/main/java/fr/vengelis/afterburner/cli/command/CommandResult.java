@@ -67,7 +67,11 @@ public class CommandResult<T> {
         return gson.toJson(this);
     }
 
-    public static <T> CommandResult<T> deserialize(String json, Class<T> clazz) {
+    public static <T> CommandResult deserialize(String json, Class<T> clazz) {
+        return gson.fromJson(json, CommandResult.class);
+    }
+
+    public static CommandResult<?> deserialize(String json) {
         return gson.fromJson(json, CommandResult.class);
     }
 }

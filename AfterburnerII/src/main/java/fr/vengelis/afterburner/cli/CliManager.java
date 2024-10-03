@@ -8,10 +8,12 @@ import fr.vengelis.afterburner.handler.PreInitHandler;
 import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistoryInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.ReprepareInstruction;
+import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.logs.Skipper;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 
+import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -126,6 +128,8 @@ public class CliManager implements PreInitHandler {
                                             boolean disableSkipper = isFinalDisableSkipper(arg.getArgs());
                                             AtomicInteger skip = new AtomicInteger();
 
+                                            ArrayDeque<String> rtn = new ArrayDeque<>();
+
                                             AfterburnerSlaveApp.get().getLogHistory().forEach(log -> {
                                                 PrintedLogEvent event1 = new PrintedLogEvent(log, PrintedLogEvent.Handler.CLI);
                                                 AfterburnerSlaveApp.get().getEventManager().call(event1);
@@ -137,23 +141,22 @@ public class CliManager implements PreInitHandler {
                                                 if(!disableSkipper) {
                                                     for(Skipper value : AfterburnerSlaveApp.get().getLogSkipperManager().getSkipperList()) {
                                                         if(value.getPattern().matcher(log.getLine()).find()) {
-                                                            if(value.isCast()) ConsoleLogger.printLine(Level.INFO, "LH : Skipper trigger : " + log.getLine() + " (" + value.getLineSkip() + " lines ignored)");
-                                                            if(value.getAction() != null) ConsoleLogger.printLine(Level.INFO, String.format("LH : Action of line >%s< is volontary skipped by log history !", log.getLine()));
                                                             skip.addAndGet(value.getLineSkip());
                                                         }
                                                     }
                                                 }
 
-                                                if(skip.get() == 0) ConsoleLogger.printLine(Level.INFO, "LH : " + log.getLine());
+                                                if(skip.get() == 0) {
+                                                    rtn.add(log.getLine());
+                                                }
                                                 else {
                                                     log.setSkip(true);
                                                     skip.getAndDecrement();
                                                 }
                                             });
 
-                                            // TODO : A completer
                                             return new AtbCommand.ExecutionResult<>(true,
-                                                    "");
+                                                    rtn);
                                         })
                                         .setActionClient(ClientCommandAction::perform)
                                         .build())

@@ -77,6 +77,7 @@ public class AfterburnerClientApp implements AApp{
         try {
             client.start();
         } catch (Exception ignored) {
+            ConsoleLogger.printStacktrace(ignored);
         }
         eventManager.call(new ExecutableEvent(null, new StringBuilder()));
     }

@@ -40,6 +40,10 @@ public class ConsoleLogger {
         return "        ";
     }
 
+    public static String getLog(Level level, String message) {
+        return getCurrentTime(level) + message;
+    }
+
     public static void printSeparator(Level level) {
         StringBuilder spaceBar = new StringBuilder("-");
         for(int i = 0; i <= barLengh-1; i++) {

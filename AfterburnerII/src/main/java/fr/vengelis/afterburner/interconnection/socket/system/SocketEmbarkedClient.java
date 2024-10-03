@@ -4,6 +4,7 @@ import fr.vengelis.afterburner.AfterburnerClientApp;
 import fr.vengelis.afterburner.cli.command.AtbCommand;
 import fr.vengelis.afterburner.cli.command.CommandInstruction;
 import fr.vengelis.afterburner.cli.command.CommandResult;
+import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.events.impl.client.CommandReceiveResultEvent;
 import fr.vengelis.afterburner.events.impl.client.ServerConnectEvent;
 import fr.vengelis.afterburner.events.impl.client.ServerDisconnectEvent;
@@ -19,9 +20,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayDeque;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 
 public class SocketEmbarkedClient {
@@ -101,12 +100,13 @@ public class SocketEmbarkedClient {
                                 msg = "[MA] [" + event.getLog().getLevel().getName() + "] " + event.getLog().getLine();
                                 ConsoleLogger.printLine(Level.INFO, "[SCR] > " + msg);
                             }
-                        } else if(serverMessage.startsWith("Echo: ")){
-                            msg = serverMessage.substring(6);
-                            CommandResult<String> rtn = CommandResult.deserialize(msg, String.class);
-                            ConsoleLogger.printLine(
-                                    rtn.getResponseData().isSuccess() ? Level.INFO : Level.SEVERE,
-                                    "[SCR] > " + rtn.getResponseData().getResponseData());
+                        } else if(serverMessage.startsWith("Echo:")){
+                            msg = serverMessage.substring(5);
+                            CommandResult<?> rtn;
+                            String[] splited = msg.split("---ATBSPLITER---");
+//                            String type = splited[0].replace("Type=", "");
+                            rtn = CommandResult.deserialize(splited[1]);
+                            CommandResultReader.read(rtn);
                         }
                     }
                 }
