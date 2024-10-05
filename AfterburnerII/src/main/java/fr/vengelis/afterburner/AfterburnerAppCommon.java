@@ -57,7 +57,7 @@ public class AfterburnerAppCommon {
         });
 
         app.getPluginManager().loadPlugins(Afterburner.WORKING_AREA + File.separator + "plugins");
-        app.getPluginManager().getPlugins().forEach((n, p) -> {
+        app.getPluginManager().getCompatiblePlugins().forEach((n, p) -> {
             ConsoleLogger.printLine(Level.INFO, "Loading plugin '" + n + "'");
             try {
                 p.onLoad();
@@ -71,6 +71,13 @@ public class AfterburnerAppCommon {
                 } catch (Exception e) {
                     ConsoleLogger.printStacktrace(e);
                 }
+            }
+        });
+        app.getPluginManager().getAllPlugins().forEach((n, p) -> {
+            try {
+                p.registerCommands(app.getCliManager().getRootCommand());
+            } catch (AbstractMethodError e) {
+                ConsoleLogger.printStacktrace(e, "Plugin " + p.getClass().getSimpleName() + " is broken.");
             }
         });
         app.getEventManager().call(new LoadEvent());

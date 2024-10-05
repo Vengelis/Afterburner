@@ -6,9 +6,7 @@ import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.ProviderAndPluginUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -21,7 +19,8 @@ import java.util.logging.Level;
 
 public class PluginManager {
 
-    private Map<String, AbstractATBPlugin> plugins = new HashMap<>();
+    private Map<String, AbstractATBPlugin> compatiblePlugins = new HashMap<>();
+    private Map<String, AbstractATBPlugin> allPlugins = new HashMap<>();
 
     public void loadPlugins(String folderPath) {
         ConsoleLogger.printLine(Level.INFO, "Searching and registering plugin");
@@ -77,17 +76,17 @@ public class PluginManager {
     }
 
     private void registerPlugin(ATBPlugin atbPluginAnnotation, Class<?> loadedClass) {
-        if (!plugins.containsKey(atbPluginAnnotation.name())) {
+        if (!compatiblePlugins.containsKey(atbPluginAnnotation.name())) {
             if(AbstractATBPlugin.class.isAssignableFrom(loadedClass)) {
                 try {
+                    AbstractATBPlugin pluginInstance = (AbstractATBPlugin) loadedClass.newInstance();
                     if(atbPluginAnnotation.launchType().equals(Afterburner.getLaunchType())) {
-                        AbstractATBPlugin pluginInstance = (AbstractATBPlugin) loadedClass.newInstance();
-                        plugins.put(atbPluginAnnotation.name(), pluginInstance);
+                        compatiblePlugins.put(atbPluginAnnotation.name(), pluginInstance);
                         ConsoleLogger.printLine(Level.INFO, " - " + atbPluginAnnotation.name() + " finded");
                     } else {
                         ConsoleLogger.printLine(Level.INFO, " - " + atbPluginAnnotation.name() + " skipped (LaunchType is different from AApp)");
                     }
-
+                    allPlugins.put(atbPluginAnnotation.name(), pluginInstance);
                 } catch (InstantiationException | IllegalAccessException e) {
                     ConsoleLogger.printStacktrace(e);
                 }
@@ -99,12 +98,20 @@ public class PluginManager {
         }
     }
 
-    public AbstractATBPlugin getPlugin(String name) {
-        return plugins.get(name);
+    public AbstractATBPlugin getCompatiblePlugin(String name) {
+        return compatiblePlugins.get(name);
     }
 
-    public Map<String, AbstractATBPlugin> getPlugins() {
-        return plugins;
+    public Map<String, AbstractATBPlugin> getCompatiblePlugins() {
+        return compatiblePlugins;
+    }
+
+    public AbstractATBPlugin getPlugin(String name) {
+        return allPlugins.get(name);
+    }
+
+    public Map<String, AbstractATBPlugin> getAllPlugins() {
+        return allPlugins;
     }
 
 }

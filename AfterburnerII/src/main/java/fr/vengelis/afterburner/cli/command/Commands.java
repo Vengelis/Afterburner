@@ -1,5 +1,7 @@
 package fr.vengelis.afterburner.cli.command;
 
+import fr.vengelis.afterburner.Afterburner;
+import fr.vengelis.afterburner.AfterburnerClientApp;
 import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.events.impl.common.PrintedLogEvent;
@@ -7,8 +9,10 @@ import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistory
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.ReprepareInstruction;
 import fr.vengelis.afterburner.logs.Skipper;
+import fr.vengelis.afterburner.plugins.ATBPlugin;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.Optional;
@@ -265,14 +269,25 @@ public class Commands {
             .addAlias("is")
             .setActionServer(args -> {
                 LinkedList<String> rtn = new LinkedList<>();
-                rtn.add("Plugins : ");
-                AfterburnerSlaveApp.get().getPluginManager().getPlugins().forEach((pn, p) -> {
+                rtn.add("Server Plugins : ");
+                AfterburnerSlaveApp.get().getPluginManager().getCompatiblePlugins().forEach((pn, p) -> {
                     rtn.add(" - " + pn);
                 });
                 return new AtbCommand.ExecutionResult<>(true,
                         rtn);
             })
-            .setActionClient(ClientCommandAction::perform)
+            .setActionClient(args -> {
+                ConsoleLogger.printLine(Level.INFO, "Client Plugins :");
+                AfterburnerClientApp.get().getPluginManager().getAllPlugins().forEach((pn, p) -> {
+                    for (Annotation annotation : p.getClass().getAnnotations()) {
+                        if(annotation instanceof ATBPlugin) {
+                            if(((ATBPlugin) annotation).launchType().equals(Afterburner.LaunchType.PANEL))
+                                ConsoleLogger.printLine(Level.INFO, " - " + pn);
+                        }
+                    }
+                });
+                return ClientCommandAction.perform(args);
+            })
             .build();
 
     // Afterburner Broadcaster Subcommand
