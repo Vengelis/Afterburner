@@ -25,6 +25,7 @@ public class Listeners implements Listener {
         for (Adapter adapter : AdapterPlugin.get().getAdapterManager().getAdapters().values()) {
             if(adapter.matchName()) {
                 line[0] = adapter.getExec();
+                AdapterPlugin.get().lastApplied = adapter;
                 ConsoleLogger.printLine(Level.INFO, "JVA : applying adapter " + adapter.getName());
             }
         }
