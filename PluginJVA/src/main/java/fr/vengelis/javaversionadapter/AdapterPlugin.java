@@ -29,10 +29,8 @@ public class AdapterPlugin extends AbstractATBPlugin implements AsConfig {
     public Adapter lastApplied = null;
 
     @Override
-    public void onLoad() {
-        instance = this;
-        AfterburnerSlaveApp.get().getEventManager().register(new Listeners());
-        AfterburnerSlaveApp.get().getCliManager().getRootCommand().addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
+    public void registerCommands(AtbCommand root) {
+        root.addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.CONTINIOUS)
                 .setName("jva")
                 .setDescription("")
                 .addSubCommand(new AtbCommand.AtbCommandBuilder(AtbCommand.State.FINAL)
@@ -47,6 +45,12 @@ public class AdapterPlugin extends AbstractATBPlugin implements AsConfig {
                         .setActionClient(ClientCommandAction::perform)
                         .build())
                 .build());
+    }
+
+    @Override
+    public void onLoad() {
+        instance = this;
+        AfterburnerSlaveApp.get().getEventManager().register(new Listeners());
     }
 
     @Override
