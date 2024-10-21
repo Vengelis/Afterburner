@@ -4,7 +4,7 @@ import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.exceptions.BrokenProviderException;
 import fr.vengelis.afterburner.providers.impl.CommandLineProvider;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
-import fr.vengelis.afterburner.utils.ProviderAndPluginUtils;
+import fr.vengelis.afterburner.utils.PAPUtils;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -35,11 +35,11 @@ public class ProviderManager {
 
                     while (entries.hasMoreElements()) {
                         JarEntry entry = entries.nextElement();
-                        if (ProviderAndPluginUtils.isValidClassEntry(entry)) {
+                        if (PAPUtils.isValidClassEntry(entry)) {
                             registerProviderFromClassEntry(entry, classLoader);
                         }
-                        if (ProviderAndPluginUtils.isValidYmlEntry(entry)) {
-                            ProviderAndPluginUtils.extractYmlFile(entry, jarFile, "providers");
+                        if (PAPUtils.isValidYmlEntry(entry)) {
+                            PAPUtils.extractYmlFile(entry, jarFile, "providers");
                         }
                     }
                 } catch (IOException e) {

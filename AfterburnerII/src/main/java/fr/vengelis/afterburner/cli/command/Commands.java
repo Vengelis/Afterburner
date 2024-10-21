@@ -9,10 +9,9 @@ import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistory
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.ReprepareInstruction;
 import fr.vengelis.afterburner.logs.Skipper;
-import fr.vengelis.afterburner.plugins.ATBPlugin;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
+import fr.vengelis.afterburner.utils.PAPUtils;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.Optional;
@@ -279,12 +278,8 @@ public class Commands {
             .setActionClient(args -> {
                 ConsoleLogger.printLine(Level.INFO, "Client Plugins :");
                 AfterburnerClientApp.get().getPluginManager().getAllPlugins().forEach((pn, p) -> {
-                    for (Annotation annotation : p.getClass().getAnnotations()) {
-                        if(annotation instanceof ATBPlugin) {
-                            if(((ATBPlugin) annotation).launchType().equals(Afterburner.LaunchType.PANEL))
-                                ConsoleLogger.printLine(Level.INFO, " - " + pn);
-                        }
-                    }
+                    if(PAPUtils.isPluginType(p, Afterburner.LaunchType.PANEL))
+                        ConsoleLogger.printLine(Level.INFO, " - " + pn);
                 });
                 return ClientCommandAction.perform(args);
             })

@@ -3,7 +3,7 @@ package fr.vengelis.afterburner.plugins;
 import fr.vengelis.afterburner.Afterburner;
 import fr.vengelis.afterburner.exceptions.BrokenPluginException;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
-import fr.vengelis.afterburner.utils.ProviderAndPluginUtils;
+import fr.vengelis.afterburner.utils.PAPUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,11 +40,11 @@ public class PluginManager {
 
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
-                if (ProviderAndPluginUtils.isValidClassEntry(entry)) {
+                if (PAPUtils.isValidClassEntry(entry)) {
                     processClassEntry(entry, classLoader);
                 }
-                if (ProviderAndPluginUtils.isValidYmlEntry(entry)) {
-                    ProviderAndPluginUtils.extractYmlFile(entry, jarFile, "plugins");
+                if (PAPUtils.isValidYmlEntry(entry)) {
+                    PAPUtils.extractYmlFile(entry, jarFile, "plugins");
                 }
             }
         } catch (IOException e) {

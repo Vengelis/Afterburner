@@ -1,15 +1,28 @@
 package fr.vengelis.afterburner.utils;
 
 import fr.vengelis.afterburner.Afterburner;
+import fr.vengelis.afterburner.plugins.ATBPlugin;
+import fr.vengelis.afterburner.plugins.AbstractATBPlugin;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class ProviderAndPluginUtils {
+public class PAPUtils {
+
+    public static boolean isPluginType(AbstractATBPlugin plugin, Afterburner.LaunchType type) {
+        for (Annotation annotation : plugin.getClass().getAnnotations()) {
+            if(annotation instanceof ATBPlugin) {
+                if(((ATBPlugin) annotation).launchType().equals(type))
+                    return true;
+            }
+        }
+        return false;
+    }
 
     public static boolean isValidClassEntry(JarEntry entry) {
         return !entry.isDirectory() && entry.getName().endsWith(".class") && !entry.getName().startsWith("META-INF/");
