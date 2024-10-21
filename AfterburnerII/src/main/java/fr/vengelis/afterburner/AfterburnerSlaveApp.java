@@ -121,26 +121,32 @@ public class AfterburnerSlaveApp implements AApp {
 
         }).start();
 
-        Scanner keyboard = new Scanner(System.in);
-        String input;
+        try {
+            Scanner keyboard = new Scanner(System.in);
+            String input;
 
-        while (true) {
-            input = keyboard.nextLine();
-            if (input != null && !input.trim().isEmpty()) {
-                CommandInstruction instruction = new CommandInstruction(
-                        input,
-                        input.split("\\s+"),
-                        AtbCommand.CommandSide.SERVER);
-                SendInstructionEvent event = new SendInstructionEvent(instruction);
-                AfterburnerSlaveApp.get().getEventManager().call(event);
-                if(event.isCancelled())
-                    ConsoleLogger.printLine(Level.INFO, "Command cancel reason : " + event.getCancelReason());
-                else
-                    CommandResultReader.read(instance.getCliManager().execute(event.getInstruction()));
-            } else {
-                ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
+            while (true) {
+                input = keyboard.nextLine();
+                if (input != null && !input.trim().isEmpty()) {
+                    CommandInstruction instruction = new CommandInstruction(
+                            input,
+                            input.split("\\s+"),
+                            AtbCommand.CommandSide.SERVER);
+                    SendInstructionEvent event = new SendInstructionEvent(instruction);
+                    AfterburnerSlaveApp.get().getEventManager().call(event);
+                    if(event.isCancelled())
+                        ConsoleLogger.printLine(Level.INFO, "Command cancel reason : " + event.getCancelReason());
+                    else
+                        CommandResultReader.read(instance.getCliManager().execute(event.getInstruction()));
+                } else {
+                    ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
+                }
             }
+        } catch (NoSuchElementException e) {
+            ConsoleLogger.printStacktrace(e, "No keyboard input detected");
         }
+
+
     }
 
     @Override

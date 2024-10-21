@@ -46,7 +46,7 @@ public class ManagedProcess {
         for (String s : ((List<String>) ConfigTemplate.EXECUTABLE_MORE_ARGS_ENGINE.getData())) {
             stb.append(" " + s);
         }
-        stb.append(wrapper.getFinalExecutable())
+        stb.append(wrapper.getFinalExecutable().replace("\"", ""))
                 .append(" DafterbunerUuid=" + uniqueId)
                 .append(" Djobid=" + AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(ProviderInstructions.JOB_ID).toString().replace("\"", ""))
                 .append(" DserverOwner=" + AfterburnerSlaveApp.get().getProviderManager().getResultInstruction(ProviderInstructions.PLAYER_REQUESTER).toString().replace("\"", ""));
