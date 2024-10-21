@@ -26,6 +26,7 @@ import java.util.logging.Level;
 public class SocketEmbarkedClient {
     private final String host;
     private final int port;
+    private final String password;
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
@@ -33,9 +34,10 @@ public class SocketEmbarkedClient {
 
     private Boolean displaylog;
 
-    public SocketEmbarkedClient(String host, int port) {
+    public SocketEmbarkedClient(String host, int port, String password) {
         this.host = host;
         this.port = port;
+        this.password = password;
     }
 
     public void start() throws IOException {
@@ -47,8 +49,7 @@ public class SocketEmbarkedClient {
         // Sending to server UUID for said "new connection attempted"
         out.println(clientInformations.getUuid());
 
-        String password = "strong-password";
-        String hashedPassword = hashPassword(password, clientInformations.getUuid().toString());
+        String hashedPassword = hashPassword(this.password, clientInformations.getUuid().toString());
         out.println(hashedPassword);
 
         String response = in.readLine();

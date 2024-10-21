@@ -7,6 +7,7 @@ import fr.vengelis.afterburner.events.impl.common.ExecutableEvent;
 import fr.vengelis.afterburner.events.impl.common.InitializeEvent;
 import fr.vengelis.afterburner.events.impl.common.PreparingEvent;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
+import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast;
 import fr.vengelis.afterburner.plugins.PluginManager;
 import fr.vengelis.afterburner.providers.ProviderManager;
@@ -43,11 +44,28 @@ public class AfterburnerBroadcasterApp implements AApp{
     private boolean alreadyInit = false;
     private final List<SlaveBroadcast> slaves = new ArrayList<>();
 
+    public AfterburnerBroadcasterApp() {
+        instance = this;
+    }
+
+    @Override
+    public void boot(HandlerRecorder handlerRecorder) {
+        AfterburnerBroadcasterApp finalApp = instance;
+        new Thread(() -> {
+            finalApp.exportRessources();
+            handlerRecorder.executeSuperPreInit();
+            finalApp.loadPluginsAndProviders();
+            finalApp.loadGeneralConfigs();
+            handlerRecorder.executePreInit();
+            finalApp.initialize();
+            finalApp.preparing();
+            finalApp.execute();
+            finalApp.ending();
+        }).start();
+    }
+
     @Override
     public void exportRessources() {
-
-        instance = this;
-
         try {
             exporter.saveResource(new File(Afterburner.WORKING_AREA), "/broadcaster.yml", false);
             exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "plugins");

@@ -7,6 +7,7 @@ import fr.vengelis.afterburner.events.impl.common.EndEvent;
 import fr.vengelis.afterburner.events.impl.common.ExecutableEvent;
 import fr.vengelis.afterburner.events.impl.common.InitializeEvent;
 import fr.vengelis.afterburner.events.impl.common.PreparingEvent;
+import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.interconnection.socket.system.SocketEmbarkedClient;
 import fr.vengelis.afterburner.plugins.PluginManager;
 import fr.vengelis.afterburner.providers.ProviderManager;
@@ -31,12 +32,42 @@ public class AfterburnerClientApp implements AApp{
     private boolean alreadyInit = false;
     private SocketEmbarkedClient client;
 
+    private final String host;
+    private final Integer port;
+    private final String password;
+
     public AfterburnerClientApp() {
         instance = this;
+        this.host = null;
+        this.port = null;
+        this.password = null;
+    }
+
+    public AfterburnerClientApp(String host, Integer port, String password) {
+        instance = this;
+        this.host = host;
+        this.port = port;
+        this.password = password;
     }
 
     public static AfterburnerClientApp get() {
         return instance;
+    }
+
+    @Override
+    public void boot(HandlerRecorder handlerRecorder) {
+        AfterburnerClientApp finalApp = instance;
+        new Thread(() -> {
+            finalApp.exportRessources();
+            handlerRecorder.executeSuperPreInit();
+            finalApp.loadPluginsAndProviders();
+            finalApp.loadGeneralConfigs();
+            handlerRecorder.executePreInit();
+            finalApp.initialize();
+            finalApp.preparing();
+            finalApp.execute();
+            finalApp.ending();
+        }).start();
     }
 
     @Override
@@ -61,8 +92,13 @@ public class AfterburnerClientApp implements AApp{
         alreadyInit = true;
         ConsoleLogger.printLine(Level.INFO, "Initializing");
 
-        client = new SocketEmbarkedClient(ConfigGeneral.QUERY_HOST.getData().toString(), (Integer) ConfigGeneral.QUERY_PORT.getData());
-
+        if(host == null && port == null && password == null)
+            client = new SocketEmbarkedClient(
+                    ConfigGeneral.QUERY_HOST.getData().toString(),
+                    (Integer) ConfigGeneral.QUERY_PORT.getData(),
+                    ConfigGeneral.QUERY_PASSWORD.getData().toString());
+        else
+            client = new SocketEmbarkedClient(host,port,password);
         eventManager.call(new InitializeEvent());
     }
 

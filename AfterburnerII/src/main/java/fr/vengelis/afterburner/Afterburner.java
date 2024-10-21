@@ -24,6 +24,8 @@ public class Afterburner {
     public static String WORKING_AREA;
     public static boolean DISABLE_TEST_TEMPLATE = false;
     public static boolean VERBOSE = false;
+    public static String TEMPLATE = null;
+
     private static boolean DEFAULT_DISPLAY_PROGRAM_OUTPUT = true;
     private static LaunchType LAUNCH_TYPE = LaunchType.SLAVE;
 
@@ -59,12 +61,11 @@ public class Afterburner {
             ConsoleLogger.printStacktrace(e);
             System.exit(1);
         }
-        String template = null;
         for (String arg : stArgs) {
             if (arg.startsWith("DbaseDirectory=")) {
                 WORKING_AREA = arg.substring("DbaseDirectory=".length()).replace("\"", "").replace("<space>", " ");
             } else if (arg.startsWith("Dtemplate=")) {
-                template = arg.substring("Dtemplate=".length()).replace("\"", "").replace("<space>", " ");
+                TEMPLATE = arg.substring("Dtemplate=".length()).replace("\"", "").replace("<space>", " ");
             } else if (arg.startsWith("DtestTemplateDisabled=")) {
                 DISABLE_TEST_TEMPLATE = Boolean.parseBoolean(arg.substring("DtestTemplateDisabled=".length()).replace("\"", ""));
                 if(DISABLE_TEST_TEMPLATE) {
@@ -104,7 +105,7 @@ public class Afterburner {
             InetAddress addr = InetAddress.getLocalHost();
             final String MACHINE_NAME = addr.getHostName();
             if(LAUNCH_TYPE.equals(LaunchType.SLAVE))
-                app = new AfterburnerSlaveApp(MACHINE_NAME, template, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
+                app = new AfterburnerSlaveApp(MACHINE_NAME, TEMPLATE, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
             else if(LAUNCH_TYPE.equals(LaunchType.PANEL))
                 app = new AfterburnerClientApp();
             else if(LAUNCH_TYPE.equals(LaunchType.BROADCASTER))
@@ -114,88 +115,8 @@ public class Afterburner {
             System.exit(1);
         }
 
-        if(app instanceof AfterburnerSlaveApp) {
-            AfterburnerSlaveApp finalApp = (AfterburnerSlaveApp) app;
+        app.boot(handlerRecorder);
 
-            if(template == null) {
-                ConsoleLogger.printLine(Level.SEVERE, "Missing template argument !");
-                System.exit(1);
-            }
-
-            new Thread(() -> {
-                finalApp.exportRessources();
-                handlerRecorder.executeSuperPreInit();
-                finalApp.loadPluginsAndProviders();
-                finalApp.loadGeneralConfigs();
-                handlerRecorder.executePreInit();
-                finalApp.initialize();
-                finalApp.setReprepareEnabled(true);
-                while (finalApp.isReprepareEnabled()) {
-                    finalApp.setReprepareEnabled(false);
-                    finalApp.setRepreparedCount(finalApp.getRepreparedCount() + 1);
-                    finalApp.preparing();
-                    finalApp.execute();
-                    finalApp.ending();
-                }
-                finalApp.getRunnableManager().shutdown();
-                finalApp.getSocketServer().stop();
-                if(finalApp.getRepreparedCount() > 1) {
-                    ConsoleLogger.printLine(Level.INFO, "Number of times reprepared : " + finalApp.getRepreparedCount());
-                }
-                System.exit(0);
-
-            }).start();
-
-            Scanner keyboard = new Scanner(System.in);
-            String input;
-
-            while (true) {
-                input = keyboard.nextLine();
-                if (input != null && !input.trim().isEmpty()) {
-                    CommandInstruction instruction = new CommandInstruction(
-                            input,
-                            input.split("\\s+"),
-                            AtbCommand.CommandSide.SERVER);
-                    SendInstructionEvent event = new SendInstructionEvent(instruction);
-                    AfterburnerSlaveApp.get().getEventManager().call(event);
-                    if(event.isCancelled())
-                        ConsoleLogger.printLine(Level.INFO, "Command cancel reason : " + event.getCancelReason());
-                    else
-                        CommandResultReader.read(app.getCliManager().execute(event.getInstruction()));
-                } else {
-                    ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
-                }
-            }
-
-        } else if(app instanceof AfterburnerClientApp) {
-            AfterburnerClientApp finalApp = (AfterburnerClientApp) app;
-            new Thread(() -> {
-                finalApp.exportRessources();
-                handlerRecorder.executeSuperPreInit();
-                finalApp.loadPluginsAndProviders();
-                finalApp.loadGeneralConfigs();
-                handlerRecorder.executePreInit();
-                finalApp.initialize();
-                finalApp.preparing();
-                finalApp.execute();
-                finalApp.ending();
-            }).start();
-        } else if(app instanceof AfterburnerBroadcasterApp) {
-            AfterburnerBroadcasterApp finalApp = (AfterburnerBroadcasterApp) app;
-            new Thread(() -> {
-                finalApp.exportRessources();
-                handlerRecorder.executeSuperPreInit();
-                finalApp.loadPluginsAndProviders();
-                finalApp.loadGeneralConfigs();
-                handlerRecorder.executePreInit();
-                finalApp.initialize();
-                finalApp.preparing();
-                finalApp.execute();
-                finalApp.ending();
-            }).start();
-        } else {
-            System.exit(0);
-        }
     }
 
     public static void main(String[] args) {

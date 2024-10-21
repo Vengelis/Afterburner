@@ -3,18 +3,19 @@ package fr.vengelis.afterburner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.cli.CliManager;
+import fr.vengelis.afterburner.cli.command.AtbCommand;
+import fr.vengelis.afterburner.cli.command.CommandInstruction;
+import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.commonfiles.BaseCommonFile;
 import fr.vengelis.afterburner.commonfiles.CommonFilesTypeManager;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.configurations.ConfigTemplate;
 import fr.vengelis.afterburner.events.EventManager;
-import fr.vengelis.afterburner.events.impl.common.EndEvent;
-import fr.vengelis.afterburner.events.impl.common.ExecutableEvent;
-import fr.vengelis.afterburner.events.impl.common.InitializeEvent;
-import fr.vengelis.afterburner.events.impl.common.PreparingEvent;
+import fr.vengelis.afterburner.events.impl.common.*;
 import fr.vengelis.afterburner.events.impl.slave.*;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.exceptions.WorldFolderEmptyException;
+import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.BroadcasterWebApiHandler;
 import fr.vengelis.afterburner.interconnection.socket.system.SocketServer;
@@ -85,6 +86,61 @@ public class AfterburnerSlaveApp implements AApp {
         MACHINE_NAME = machineName;
         TEMPLATE = templateName;
         displayOutput = defaultDisplayProgramOutput;
+    }
+
+    @Override
+    public void boot(HandlerRecorder handlerRecorder) {
+        AfterburnerSlaveApp finalApp = instance;
+
+        if(Afterburner.TEMPLATE == null) {
+            ConsoleLogger.printLine(Level.SEVERE, "Missing template argument !");
+            System.exit(1);
+        }
+
+        new Thread(() -> {
+            finalApp.exportRessources();
+            handlerRecorder.executeSuperPreInit();
+            finalApp.loadPluginsAndProviders();
+            finalApp.loadGeneralConfigs();
+            handlerRecorder.executePreInit();
+            finalApp.initialize();
+            finalApp.setReprepareEnabled(true);
+            while (finalApp.isReprepareEnabled()) {
+                finalApp.setReprepareEnabled(false);
+                finalApp.setRepreparedCount(finalApp.getRepreparedCount() + 1);
+                finalApp.preparing();
+                finalApp.execute();
+                finalApp.ending();
+            }
+            finalApp.getRunnableManager().shutdown();
+            finalApp.getSocketServer().stop();
+            if(finalApp.getRepreparedCount() > 1) {
+                ConsoleLogger.printLine(Level.INFO, "Number of times reprepared : " + finalApp.getRepreparedCount());
+            }
+            System.exit(0);
+
+        }).start();
+
+        Scanner keyboard = new Scanner(System.in);
+        String input;
+
+        while (true) {
+            input = keyboard.nextLine();
+            if (input != null && !input.trim().isEmpty()) {
+                CommandInstruction instruction = new CommandInstruction(
+                        input,
+                        input.split("\\s+"),
+                        AtbCommand.CommandSide.SERVER);
+                SendInstructionEvent event = new SendInstructionEvent(instruction);
+                AfterburnerSlaveApp.get().getEventManager().call(event);
+                if(event.isCancelled())
+                    ConsoleLogger.printLine(Level.INFO, "Command cancel reason : " + event.getCancelReason());
+                else
+                    CommandResultReader.read(instance.getCliManager().execute(event.getInstruction()));
+            } else {
+                ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
+            }
+        }
     }
 
     @Override
