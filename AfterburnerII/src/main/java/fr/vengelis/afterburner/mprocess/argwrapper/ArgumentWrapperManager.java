@@ -36,7 +36,7 @@ public class ArgumentWrapperManager implements PreInitHandler {
         try {
             wrapper.export();
             wrapper.load();
-            argumentWrapperMap.put(wrapper.getType(), wrapper);
+            argumentWrapperMap.put(wrapper.getType().toLowerCase(), wrapper);
             if(VERBOSE)
                 ConsoleLogger.printLine(Level.INFO, "Registering new Argument Wrapper '" + wrapper.getType() + "'");
         } catch (IOException e) {
@@ -45,7 +45,7 @@ public class ArgumentWrapperManager implements PreInitHandler {
     }
 
     public Optional<BaseArgumentWrapper> get(String wrapperType) {
-        return Optional.ofNullable(argumentWrapperMap.get(wrapperType));
+        return Optional.ofNullable(argumentWrapperMap.get(wrapperType.toLowerCase()));
     }
 
 }

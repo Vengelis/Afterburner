@@ -29,7 +29,7 @@ public class ManagedProcess {
 
     public ManagedProcess(UUID uniqueId) {
         this.uniqueId = uniqueId;
-        Optional<BaseArgumentWrapper> gwrap = AfterburnerSlaveApp.get().getArgumentWrapperManager().get(ConfigTemplate.EXECUTABLE_TYPE.getData().toString());
+        Optional<BaseArgumentWrapper> gwrap = AfterburnerSlaveApp.get().getArgumentWrapperManager().get(ConfigTemplate.EXECUTABLE_TYPE.getData().toString().toLowerCase());
         if(!gwrap.isPresent()) {
             wrapper = new JavaArguments();
             ConsoleLogger.printLine(Level.SEVERE, "Unrecognized managed program type ! Applying default : " + wrapper.getType());
