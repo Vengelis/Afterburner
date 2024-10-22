@@ -12,12 +12,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.time.Instant;
-import java.util.UUID;
 import java.util.logging.Level;
-
-import static fr.vengelis.afterburner.Afterburner.VERBOSE;
 
 public class BroadcasterWebApiHandler {
 
@@ -82,11 +77,9 @@ public class BroadcasterWebApiHandler {
             ResponseEntity<String> response = restTemplate.exchange(url + action.getRoute(), method, request, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                if(VERBOSE) {
-                    ConsoleLogger.printLine(Level.INFO, "[Broadcaster] > Action '" + action.name() + "' successfully performed");
-                    ConsoleLogger.printLine(Level.INFO, response.getBody());
-                    attemptCallBroadcasterCount = 0;
-                }
+                ConsoleLogger.printLine(Level.INFO, "[Broadcaster] > Action '" + action.name() + "' successfully performed");
+                ConsoleLogger.printVerbose(Level.INFO, response.getBody());
+                attemptCallBroadcasterCount = 0;
             } else {
                 ConsoleLogger.printLine(Level.INFO, "[Broadcaster] > Action '" + action.name() + "' not performed (Err Code: " + response.getStatusCode() + ")");
             }
@@ -100,24 +93,6 @@ public class BroadcasterWebApiHandler {
         } catch (RestClientException e) {
             ConsoleLogger.printStacktrace(e);
         }
-    }
-
-    public static void main(String[] args) {
-        BroadcasterWebApiHandler h = new BroadcasterWebApiHandler(
-                "http://localhost:46799",
-                "bearer-token",
-                (short) 1000
-        );
-        SlaveBroadcast sb = new SlaveBroadcast(
-                UUID.randomUUID(),
-                "Test",
-                "localhost",
-                46798
-                );
-        sb.setLastContact(Instant.now().getEpochSecond());
-        sb.setAvailable(true);
-//        h.sendRequest(sb, Action.ADD, HttpMethod.POST);
-        h.sendRequest(sb, Action.LIST, HttpMethod.GET);
     }
 
     public void stop() {

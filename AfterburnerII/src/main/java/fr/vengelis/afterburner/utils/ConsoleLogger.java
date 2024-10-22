@@ -7,8 +7,8 @@
 
 package fr.vengelis.afterburner.utils;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
+import fr.vengelis.afterburner.Afterburner;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -38,6 +38,12 @@ public class ConsoleLogger {
             return " NOLOG  ";
         }
         return "        ";
+    }
+
+    public static void printVerbose(Level level, String message) {
+        if(Afterburner.VERBOSE) {
+            ConsoleLogger.printLine(level, message);
+        }
     }
 
     public static String getLog(Level level, String message) {

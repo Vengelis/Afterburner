@@ -1,9 +1,5 @@
 package fr.vengelis.afterburner;
 
-import fr.vengelis.afterburner.cli.command.AtbCommand;
-import fr.vengelis.afterburner.cli.command.CommandInstruction;
-import fr.vengelis.afterburner.cli.command.CommandResultReader;
-import fr.vengelis.afterburner.events.impl.common.SendInstructionEvent;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.updater.VersionChecker;
@@ -16,7 +12,6 @@ import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.logging.Level;
 
 public class Afterburner {
@@ -28,6 +23,8 @@ public class Afterburner {
 
     private static boolean DEFAULT_DISPLAY_PROGRAM_OUTPUT = true;
     private static LaunchType LAUNCH_TYPE = LaunchType.SLAVE;
+    private static boolean CLIENT_COMPLEXE = false;
+    private static String STRING_CONNECT = "";
 
     public enum LaunchType {
         SLAVE,
@@ -73,9 +70,7 @@ public class Afterburner {
                 }
             } else if (arg.startsWith("Dverbose=")) {
                 VERBOSE = Boolean.parseBoolean(arg.substring("Dverbose=".length()).replace("\"", ""));
-                if(VERBOSE) {
-                    ConsoleLogger.printLine(Level.CONFIG, "Verbose results");
-                }
+                ConsoleLogger.printVerbose(Level.CONFIG, "Verbose enabled");
             } else if (arg.startsWith("--no-default-output") || arg.startsWith("-ndo")) {
                 DEFAULT_DISPLAY_PROGRAM_OUTPUT = false;
                 ConsoleLogger.printLine(Level.CONFIG, "The managed program will not display the log by default");
@@ -92,7 +87,15 @@ public class Afterburner {
                     ConsoleLogger.printStacktrace(e, "Unrecognized launcher type !");
                     System.exit(1);
                 }
-
+            } else if(arg.startsWith("--credentials") || arg.startsWith("-c")) {
+                String[] c = arg.split(":");
+                CLIENT_COMPLEXE = true;
+                try {
+                    STRING_CONNECT = c[1] + ":" + c[2] + ":" + c[3];
+                } catch (Exception e) {
+                    ConsoleLogger.printStacktrace(e, "Malformed client credentials informations !");
+                    System.exit(1);
+                }
             }
         }
 
@@ -107,11 +110,16 @@ public class Afterburner {
             if(LAUNCH_TYPE.equals(LaunchType.SLAVE))
                 app = new AfterburnerSlaveApp(MACHINE_NAME, TEMPLATE, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
             else if(LAUNCH_TYPE.equals(LaunchType.PANEL))
-                app = new AfterburnerClientApp();
+                if(!CLIENT_COMPLEXE)
+                    app = new AfterburnerClientApp();
+                else {
+                    String[] c = STRING_CONNECT.split(":");
+                    app = new AfterburnerClientApp(c[0], Integer.parseInt(c[1]), c[2]);
+                }
             else if(LAUNCH_TYPE.equals(LaunchType.BROADCASTER))
                 app = new AfterburnerBroadcasterApp();
         } catch (UnknownHostException ex) {
-            System.out.println("Hostname can not be resolved");
+            ConsoleLogger.printStacktrace(ex, "Hostname can not be resolved");
             System.exit(1);
         }
 
@@ -127,7 +135,7 @@ public class Afterburner {
         Properties properties = new Properties();
         try (InputStream input = Afterburner.class.getClassLoader().getResourceAsStream("version.properties")) {
             if (input == null) {
-                System.out.println("Sorry, unable to find version.properties");
+                ConsoleLogger.printLine(Level.SEVERE,"Sorry, unable to find version.properties");
                 return null;
             }
             properties.load(input);

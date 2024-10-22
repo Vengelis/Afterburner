@@ -11,7 +11,7 @@ public class CleanLogHistoryInstruction extends BaseCommunicationInstruction<Boo
     @Override
     public Boolean execute() {
         AfterburnerSlaveApp.get().getLogHistory().clear();
-        ConsoleLogger.printLine(Level.INFO, "Log history has been cleaned.");
+        ConsoleLogger.printVerbose(Level.INFO, "Log history has been cleaned.");
         return true;
     }
 

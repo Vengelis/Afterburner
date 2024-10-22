@@ -37,8 +37,7 @@ public class ArgumentWrapperManager implements PreInitHandler {
             wrapper.export();
             wrapper.load();
             argumentWrapperMap.put(wrapper.getType().toLowerCase(), wrapper);
-            if(VERBOSE)
-                ConsoleLogger.printLine(Level.INFO, "Registering new Argument Wrapper '" + wrapper.getType() + "'");
+            ConsoleLogger.printVerbose(Level.INFO, "Registering new Argument Wrapper '" + wrapper.getType() + "'");
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(new BrokenConfigException(e));
         }

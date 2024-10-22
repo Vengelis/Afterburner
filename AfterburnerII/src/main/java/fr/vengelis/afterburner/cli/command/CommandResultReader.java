@@ -15,10 +15,10 @@ public class CommandResultReader {
             if (printer != null) {
                 printer.print(data);
             } else {
-                ConsoleLogger.printLine(Level.WARNING, "No printer found for class: " + data.getClass().getName());
+                ConsoleLogger.printVerbose(Level.WARNING, "No printer found for class: " + data.getClass().getName());
             }
         } else {
-            ConsoleLogger.printLine(Level.WARNING, "No response data to print.");
+            ConsoleLogger.printVerbose(Level.WARNING, "No response data to print.");
         }
     }
 

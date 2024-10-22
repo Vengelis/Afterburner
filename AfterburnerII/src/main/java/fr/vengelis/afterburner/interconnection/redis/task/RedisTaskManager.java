@@ -16,7 +16,7 @@ public class RedisTaskManager {
 
     public void register(AbstractRedisTask task) {
         redisTasks.add(task);
-        ConsoleLogger.printLine(Level.INFO, " - Registered redis instruction task " + task.getClass().getSimpleName() + " (channel : " + task.getChannel() + ")");
+        ConsoleLogger.printVerbose(Level.INFO, " - Registered redis instruction task " + task.getClass().getSimpleName() + " (channel : " + task.getChannel() + ")");
     }
 
     public void register(AbstractRedisTask... task) {

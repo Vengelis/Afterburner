@@ -148,10 +148,8 @@ public class AfterburnerAppCommon {
                 ((HashMap<ProviderInstructions, IAfterburnerProvider>) ConfigGeneral.PROVIDERS.getData()).put(providerInstructions, provider1);
             }
 
-            if(Afterburner.VERBOSE) {
-                for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
-                    ConsoleLogger.printLine(Level.CONFIG, "Verbose provider result : instruction : " + providerInstructions.name() + " - result : " + app.getProviderManager().getResultInstruction(providerInstructions));
-                }
+            for (ProviderInstructions providerInstructions : ProviderInstructions.values()) {
+                ConsoleLogger.printVerbose(Level.CONFIG, "Verbose provider result : instruction : " + providerInstructions.name() + " - result : " + app.getProviderManager().getResultInstruction(providerInstructions));
             }
 
             if(!((boolean) ConfigGeneral.READY.getData())) {

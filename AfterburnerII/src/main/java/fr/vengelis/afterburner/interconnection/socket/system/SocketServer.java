@@ -53,7 +53,7 @@ public class SocketServer implements PreInitHandler {
                 50,
                 this.endpoint
         )) {
-            ConsoleLogger.printLine(Level.INFO, "Query socket server started on '" + endpoint.getHostAddress() + ":" + ConfigGeneral.QUERY_PORT.getData() + "'");
+            ConsoleLogger.printLineBox(Level.INFO, "Query socket server started on '" + endpoint.getHostAddress() + ":" + ConfigGeneral.QUERY_PORT.getData() + "'");
             while (running) {
                 Socket clientSocket = serverSocket.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));

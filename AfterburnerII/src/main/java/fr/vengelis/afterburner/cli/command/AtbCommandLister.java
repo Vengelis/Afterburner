@@ -3,7 +3,6 @@ package fr.vengelis.afterburner.cli.command;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.util.Stack;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 

@@ -14,8 +14,7 @@ public class AdapterManager {
     private final Map<String, Adapter> adapterMap = new HashMap<>();
 
     public void register(Adapter adapter) {
-        if(VERBOSE)
-            ConsoleLogger.printLine(Level.INFO, "Registering new java adapter : " + adapter.getName());
+        ConsoleLogger.printVerbose(Level.INFO, "Registering new java adapter : " + adapter.getName());
         adapterMap.put(adapter.getName(), adapter);
     }
 
