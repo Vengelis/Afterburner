@@ -3,6 +3,7 @@ package fr.vengelis.afterburner.interconnection.socket.broadcaster;
 import com.google.gson.JsonSyntaxException;
 import fr.vengelis.afterburner.AfterburnerBroadcasterApp;
 import fr.vengelis.afterburner.configurations.ConfigBroadcaster;
+import fr.vengelis.afterburner.events.impl.broadcaster.PerformActionEvent;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -67,6 +68,8 @@ public class SocketBroadcaster {
         sb.setLastContact(Instant.now().getEpochSecond());
         AfterburnerBroadcasterApp.get().getSlaves().add(sb);
 
+        AfterburnerBroadcasterApp.get().getEventManager().call(new PerformActionEvent(sb, BroadcasterWebApiHandler.Action.ADD));
+
         return new ResponseEntity<>("Client added", HttpStatus.OK);
     }
 
@@ -101,6 +104,9 @@ public class SocketBroadcaster {
             inded.setAvailable(sb.isAvailable());
             inded.setLastContact(sb.getLastContact());
             inded.setState(sb.getState());
+
+            AfterburnerBroadcasterApp.get().getEventManager().call(new PerformActionEvent(sb, BroadcasterWebApiHandler.Action.UPDATE));
+
             return new ResponseEntity<>("Client updated", HttpStatus.OK);
         }
     }
@@ -120,6 +126,7 @@ public class SocketBroadcaster {
 
         for (SlaveBroadcast slave : new ArrayList<>(AfterburnerBroadcasterApp.get().getSlaves())) {
             if(slave.getUuid().equals(sb.getUuid())) {
+                AfterburnerBroadcasterApp.get().getEventManager().call(new PerformActionEvent(sb, BroadcasterWebApiHandler.Action.REMOVE));
                 AfterburnerBroadcasterApp.get().getSlaves().remove(slave);
                 return new ResponseEntity<>("Client deleted", HttpStatus.OK);
             }

@@ -60,7 +60,6 @@ public class BroadcasterWebApiHandler {
 
         }
 
-
         if(attemptCallBroadcasterFailed) return;
 
         RestTemplate restTemplate = new RestTemplate();
