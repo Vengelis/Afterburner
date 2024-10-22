@@ -127,7 +127,8 @@ public class AtbCommand {
     }
 
     public void addSubCommand(AtbCommand subCommand) {
-        subCommands.put(subCommand.name, subCommand);
+        subCommands.put(subCommand.getName(), subCommand);
+        ConsoleLogger.printVerbose(Level.INFO, "Subcommand '" + subCommand.getName() + "' added to command '" + this.name + "'");
     }
 
     public Map<String, AtbCommand> getSubCommands() {
