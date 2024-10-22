@@ -31,7 +31,7 @@ public class ConsoleLogger {
         } else if (level.equals(CONFIG)) {
             return " CONFIG ";
         } else if (level.equals(FINE)) {
-            return "LOG FINE";
+            return "VERBOSE ";
         } else if (level.equals(FINER)) {
             return "  LOG   ";
         } else if (level.equals(ALL)) {
@@ -42,7 +42,7 @@ public class ConsoleLogger {
 
     public static void printVerbose(Level level, String message) {
         if(Afterburner.VERBOSE) {
-            ConsoleLogger.printLine(level, message);
+            ConsoleLogger.printLine(FINE, message);
         }
     }
 

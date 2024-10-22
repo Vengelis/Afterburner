@@ -323,6 +323,8 @@ public class AfterburnerSlaveApp implements AApp {
 
             cliManager.init();
 
+            ConsoleLogger.printVerbose(Level.INFO, "Registering redis tasks ...");
+
             redisTaskManager.register(
                     new RedisKillTask(),
                     new RedisAfterburnerInfoTask(),
