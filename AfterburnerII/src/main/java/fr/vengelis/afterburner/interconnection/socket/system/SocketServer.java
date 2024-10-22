@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
+import java.util.Enumeration;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -34,14 +35,29 @@ public class SocketServer implements PreInitHandler {
     public void startServer() {
 
         try {
-            if(Boolean.parseBoolean(ConfigGeneral.QUERY_AUTO_BIND.getData().toString()))
-                endpoint = InetAddress.getLocalHost();
-            else
+            if(Boolean.parseBoolean(ConfigGeneral.QUERY_AUTO_BIND.getData().toString())) {
+                Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+                while(interfaces.hasMoreElements()) {
+                    NetworkInterface networkInterface = interfaces.nextElement();
+                    Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress inetAddress = inetAddresses.nextElement();
+                        if(!inetAddress.getHostAddress().startsWith("127.0.0.1")) {
+                            endpoint = InetAddress.getByName(inetAddress.getHostAddress());
+                            break;
+                        }
+                    }
+                }
+                if(endpoint == null) {
+                    endpoint = InetAddress.getLocalHost();
+                }
+            } else {
                 endpoint = InetAddress.getByName(
                         ConfigGeneral.QUERY_HOST.getData().toString().equalsIgnoreCase("localhost") ?
                                 "127.0.0.1" : ConfigGeneral.QUERY_HOST.getData().toString()
                 );
-        } catch (UnknownHostException ex) {
+            }
+        } catch (UnknownHostException | SocketException ex) {
             System.out.println("Hostname can not be resolved");
             System.exit(1);
         }
