@@ -9,6 +9,7 @@ import fr.vengelis.afterburner.events.impl.common.InitializeEvent;
 import fr.vengelis.afterburner.events.impl.common.PreparingEvent;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.interconnection.socket.system.SocketEmbarkedClient;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.plugins.PluginManager;
 import fr.vengelis.afterburner.providers.ProviderManager;
 import fr.vengelis.afterburner.runnables.RunnableManager;
@@ -72,7 +73,7 @@ public class AfterburnerClientApp implements AApp{
 
     @Override
     public void exportRessources() {
-        ConsoleLogger.printLine(Level.INFO, "Exporting configurations ...");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-exporting-configs"));
         AfterburnerAppCommon.exportRessources(this);
     }
 
@@ -90,7 +91,7 @@ public class AfterburnerClientApp implements AApp{
     public void initialize() {
         if(alreadyInit) return;
         alreadyInit = true;
-        ConsoleLogger.printLine(Level.INFO, "Initializing");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-initializing"));
 
         if(host == null && port == null && password == null)
             client = new SocketEmbarkedClient(

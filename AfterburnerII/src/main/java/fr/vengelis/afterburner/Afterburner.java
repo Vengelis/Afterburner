@@ -2,7 +2,9 @@ package fr.vengelis.afterburner;
 
 import fr.vengelis.afterburner.arguments.ArgumentManager;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
+import fr.vengelis.afterburner.utils.ResourceExporter;
 import fr.vengelis.afterburner.utils.updater.VersionChecker;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,7 @@ public class Afterburner {
     private static boolean CLIENT_COMPLEXE = false;
     private static String STRING_CONNECT = "";
     private static String MACHINE_NAME = "";
+    private static final ResourceExporter exporter = new ResourceExporter();
 
     public enum LaunchType {
         SLAVE(() -> new AfterburnerSlaveApp(MACHINE_NAME, TEMPLATE, DEFAULT_DISPLAY_PROGRAM_OUTPUT)),
@@ -72,6 +75,19 @@ public class Afterburner {
         }
 
         ArgumentManager argumentManager = new ArgumentManager();
+
+        exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "languages");
+        try {
+            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/languages/fr_FR.yml", false);
+            exporter.saveResource(new File(Afterburner.WORKING_AREA), "/languages/en_US.yml", false);
+        } catch (Exception e) {
+            ConsoleLogger.printStacktrace(e);
+            System.exit(1);
+        }
+
+
+        LanguageManager.loadLanguagesFromPath(Afterburner.WORKING_AREA + File.separator + "languages");
+        LanguageManager.setCurrentLanguage("en_US");
 
         argumentManager.addArgument("DbaseDirectory", null, null, (arg, value) -> {
             WORKING_AREA = value.replace("\"", "").replace("<space>", " ");

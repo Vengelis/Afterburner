@@ -19,6 +19,7 @@ import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.BroadcasterWebApiHandler;
 import fr.vengelis.afterburner.interconnection.socket.system.SocketServer;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.logs.LogSkipperManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.mprocess.ManagedProcess;
@@ -97,7 +98,7 @@ public class AfterburnerSlaveApp implements AApp {
         AfterburnerSlaveApp finalApp = instance;
 
         if(Afterburner.TEMPLATE == null) {
-            ConsoleLogger.printLine(Level.SEVERE, "Missing template argument !");
+            ConsoleLogger.printLine(Level.SEVERE, LanguageManager.translate("error-missing-template-argument"));
             System.exit(1);
         }
 
@@ -119,7 +120,7 @@ public class AfterburnerSlaveApp implements AApp {
             finalApp.getRunnableManager().shutdown();
             finalApp.getSocketServer().stop();
             if(finalApp.getRepreparedCount() > 1) {
-                ConsoleLogger.printLine(Level.INFO, "Number of times reprepared : " + finalApp.getRepreparedCount());
+                ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("atb-count-reprepared"), finalApp.getRepreparedCount()));
             }
             System.exit(0);
 
@@ -139,15 +140,15 @@ public class AfterburnerSlaveApp implements AApp {
                     SendInstructionEvent event = new SendInstructionEvent(instruction);
                     AfterburnerSlaveApp.get().getEventManager().call(event);
                     if(event.isCancelled())
-                        ConsoleLogger.printLine(Level.INFO, "Command cancel reason : " + event.getCancelReason());
+                        ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("command-cancel-reason"),event.getCancelReason()));
                     else
                         CommandResultReader.read(instance.getCliManager().execute(event.getInstruction()));
                 } else {
-                    ConsoleLogger.printLine(Level.SEVERE, "No command entered. Please try again.");
+                    ConsoleLogger.printLine(Level.SEVERE, LanguageManager.translate("error-no-command-entered"));
                 }
             }
         } catch (NoSuchElementException e) {
-            ConsoleLogger.printStacktrace(e, "No keyboard input detected");
+            ConsoleLogger.printStacktrace(e, LanguageManager.translate("error-no-keyboard-input"));
         }
 
 
@@ -156,7 +157,7 @@ public class AfterburnerSlaveApp implements AApp {
     @Override
     public void exportRessources() {
         state = AfterburnerState.EXPORTING;
-        ConsoleLogger.printLine(Level.INFO, "Exporting configurations ...");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-exporting-configs"));
         try {
             AfterburnerAppCommon.exportRessources(this);
             exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "templates");
@@ -178,13 +179,13 @@ public class AfterburnerSlaveApp implements AApp {
 
     @Override
     public void loadGeneralConfigs() {
-        ConsoleLogger.printLine(Level.INFO, "Loading configurations");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("loading-configuration"));
 
         AfterburnerAppCommon.loadGeneralConfig(this);
 
         try {
             // Common Files
-            ConsoleLogger.printLine(Level.INFO, "Checking common files");
+            ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("bcf-check"));
             commonFilesGeneral.clear();
             for (Class<? extends BaseCommonFile> fileTypes : this.commonFilesTypeManager.get()) {
                 ConsoleLogger.printLine(Level.INFO, " - CFM : " + fileTypes.getSimpleName());
@@ -217,7 +218,7 @@ public class AfterburnerSlaveApp implements AApp {
     public void loadTemplateConfig() {
         // Template Config
         try {
-            ConsoleLogger.printLine(Level.INFO, "Loading template configuration '" + getTemplateName() + "'");
+            ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("loading-template-configuration"),getTemplateName()));
             File config = new File(Afterburner.WORKING_AREA + File.separator + "templates" + File.separator + getTemplateName());
             InputStream stm = new FileInputStream(config);
             Yaml yaml = new Yaml();
@@ -264,10 +265,10 @@ public class AfterburnerSlaveApp implements AApp {
                                 if(((BaseCommonFile) o).getName().equalsIgnoreCase(cfs.toString())) {
                                     cfla.add(o);
                                     finded = true;
-                                    ConsoleLogger.printLine(Level.INFO, " - Requested common file of type '" + clazz.getSimpleName() + "' with name '" + cfs + "' added.");
+                                    ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("bcf-added"),clazz.getSimpleName(),cfs));
                                 }
                             }
-                            if(!finded) ConsoleLogger.printLine(Level.WARNING, " - Requested common file of type '" + clazz.getSimpleName() + "' with name '" + cfs + "' doesn't exist.");
+                            if(!finded) ConsoleLogger.printLine(Level.WARNING, String.format(LanguageManager.translate("bcf-failed"),clazz.getSimpleName(),cfs));
                         }
                         ((Map<Class<? extends BaseCommonFile>, List<Object>>)ConfigTemplate.COMMON_FILES.getData()).put(clazz, cfla);
                     } catch (Exception e) {
@@ -316,7 +317,7 @@ public class AfterburnerSlaveApp implements AApp {
         alreadyInit = true;
 
         state = AfterburnerState.INITIALIZING;
-        ConsoleLogger.printLine(Level.INFO, "Initializing");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-initializing"));
 
         if((boolean) ConfigGeneral.REDIS_ENABLED.getData()) {
             RedisConnection.create();
@@ -374,7 +375,7 @@ public class AfterburnerSlaveApp implements AApp {
     @Override
     public void preparing() {
         state = AfterburnerState.PREPARING;
-        ConsoleLogger.printLine(Level.INFO, "Preparing");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-preparing"));
         PreparingEvent event = new PreparingEvent(PreparingEvent.Stage.PRE);
         eventManager.call(event);
         if(!event.isCancelled()) {

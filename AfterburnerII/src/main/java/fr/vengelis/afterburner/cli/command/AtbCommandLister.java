@@ -1,5 +1,6 @@
 package fr.vengelis.afterburner.cli.command;
 
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.util.Stack;
@@ -33,7 +34,7 @@ public class AtbCommandLister implements Function<CommandInstruction, AtbCommand
                         (currentCommand.getAliases().isEmpty() ? "" : "|" + String.join("|", currentCommand.getAliases())) +
                         ": " + currentCommand.getDescription());
             } else {
-                ConsoleLogger.printLine(Level.INFO, " HELP CENTER :");
+                ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("command-help-center"));
             }
 
             currentCommand.getSubCommands().values().forEach(stack::push);
