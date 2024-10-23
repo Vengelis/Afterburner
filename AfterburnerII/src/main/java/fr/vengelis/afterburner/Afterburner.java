@@ -1,5 +1,6 @@
 package fr.vengelis.afterburner;
 
+import fr.vengelis.afterburner.arguments.ArgumentManager;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.updater.VersionChecker;
@@ -12,6 +13,7 @@ import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class Afterburner {
@@ -25,12 +27,22 @@ public class Afterburner {
     private static LaunchType LAUNCH_TYPE = LaunchType.SLAVE;
     private static boolean CLIENT_COMPLEXE = false;
     private static String STRING_CONNECT = "";
+    private static String MACHINE_NAME = "";
 
     public enum LaunchType {
-        SLAVE,
-        PANEL,
-        BROADCASTER,
-        ;
+        SLAVE(() -> new AfterburnerSlaveApp(MACHINE_NAME, TEMPLATE, DEFAULT_DISPLAY_PROGRAM_OUTPUT)),
+        PANEL(() -> CLIENT_COMPLEXE ? new AfterburnerClientApp(STRING_CONNECT.split(":")[0], Integer.parseInt(STRING_CONNECT.split(":")[1]), STRING_CONNECT.split(":")[2]) : new AfterburnerClientApp()),
+        BROADCASTER(AfterburnerBroadcasterApp::new);
+
+        private final Supplier<AApp> appSupplier;
+
+        LaunchType(Supplier<AApp> appSupplier) {
+            this.appSupplier = appSupplier;
+        }
+
+        public AApp createApp() {
+            return appSupplier.get();
+        }
     }
 
     public static void start() {
@@ -58,46 +70,50 @@ public class Afterburner {
             ConsoleLogger.printStacktrace(e);
             System.exit(1);
         }
-        for (String arg : stArgs) {
-            if (arg.startsWith("DbaseDirectory=")) {
-                WORKING_AREA = arg.substring("DbaseDirectory=".length()).replace("\"", "").replace("<space>", " ");
-            } else if (arg.startsWith("Dtemplate=")) {
-                TEMPLATE = arg.substring("Dtemplate=".length()).replace("\"", "").replace("<space>", " ");
-            } else if (arg.startsWith("DtestTemplateDisabled=")) {
-                DISABLE_TEST_TEMPLATE = Boolean.parseBoolean(arg.substring("DtestTemplateDisabled=".length()).replace("\"", ""));
-                if(DISABLE_TEST_TEMPLATE) {
-                    ConsoleLogger.printLine(Level.CONFIG, "Example template ('templates/example.yml') was disabled");
-                }
-            } else if (arg.startsWith("Dverbose=")) {
-                VERBOSE = Boolean.parseBoolean(arg.substring("Dverbose=".length()).replace("\"", ""));
-                ConsoleLogger.printVerbose(Level.CONFIG, "Verbose enabled");
-            } else if (arg.startsWith("--no-default-output") || arg.startsWith("-ndo")) {
-                DEFAULT_DISPLAY_PROGRAM_OUTPUT = false;
-                ConsoleLogger.printLine(Level.CONFIG, "The managed program will not display the log by default");
-            } else if (arg.startsWith("--type-launch") || arg.startsWith("-tl")) {
-                String type = "SLAVE";
-                if(arg.startsWith("--type-launch"))
-                    type = arg.substring("--type-launch:".length()).toUpperCase();
-                if(arg.startsWith("-tl"))
-                    type = arg.substring("-tl:".length()).toUpperCase();
-                try {
-                    LAUNCH_TYPE = LaunchType.valueOf(type);
-                    ConsoleLogger.printLine(Level.CONFIG, "Afterburner instance type '" + LAUNCH_TYPE.name() + "'");
-                } catch (IllegalArgumentException e) {
-                    ConsoleLogger.printStacktrace(e, "Unrecognized launcher type !");
-                    System.exit(1);
-                }
-            } else if(arg.startsWith("--credentials") || arg.startsWith("-c")) {
-                String[] c = arg.split(":");
-                CLIENT_COMPLEXE = true;
-                try {
-                    STRING_CONNECT = c[1] + ":" + c[2] + ":" + c[3];
-                } catch (Exception e) {
-                    ConsoleLogger.printStacktrace(e, "Malformed client credentials informations !");
-                    System.exit(1);
-                }
+
+        ArgumentManager argumentManager = new ArgumentManager();
+
+        argumentManager.addArgument("DbaseDirectory", null, null, (arg, value) -> {
+            WORKING_AREA = value.replace("\"", "").replace("<space>", " ");
+        });
+        argumentManager.addArgument("Dtemplate", null, null, (arg, value) -> {
+            TEMPLATE = value.replace("\"", "").replace("<space>", " ");
+        });
+        argumentManager.addArgument("DtestTemplateDisabled", null, null, (arg, value) -> {
+            DISABLE_TEST_TEMPLATE = Boolean.parseBoolean(value.replace("\"", ""));
+            if (DISABLE_TEST_TEMPLATE) {
+                ConsoleLogger.printLine(Level.CONFIG, "Example template ('templates/example.yml') was disabled");
             }
-        }
+        });
+        argumentManager.addArgument("Dverbose", null, null, (arg, value) -> {
+            VERBOSE = Boolean.parseBoolean(value.replace("\"", ""));
+            ConsoleLogger.printVerbose(Level.CONFIG, "Verbose enabled");
+        });
+        argumentManager.addArgument("--no-default-output", null, "-ndo", (arg, value) -> {
+            DEFAULT_DISPLAY_PROGRAM_OUTPUT = false;
+            ConsoleLogger.printLine(Level.CONFIG, "The managed program will not display the log by default");
+        });
+        argumentManager.addArgument("--type-launch", null, "-tl", (arg, value) -> {
+            try {
+                LAUNCH_TYPE = LaunchType.valueOf(value.toUpperCase());
+                ConsoleLogger.printLine(Level.CONFIG, "Afterburner instance type '" + LAUNCH_TYPE.name() + "'");
+            } catch (IllegalArgumentException e) {
+                ConsoleLogger.printStacktrace(e, "Unrecognized launcher type !");
+                System.exit(1);
+            }
+        });
+        argumentManager.addArgument("--credentials", null, "-c", (arg, value) -> {
+            String[] c = value.split(":");
+            CLIENT_COMPLEXE = true;
+            try {
+                STRING_CONNECT = c[0] + ":" + c[1] + ":" + c[2];
+            } catch (Exception e) {
+                ConsoleLogger.printStacktrace(e, "Malformed client credentials informations !");
+                System.exit(1);
+            }
+        });
+
+        argumentManager.parseArguments(stArgs);
 
         ConsoleLogger.printLine(Level.CONFIG, "Working Area : " + WORKING_AREA);
 
@@ -106,18 +122,8 @@ public class Afterburner {
 
         try {
             InetAddress addr = InetAddress.getLocalHost();
-            final String MACHINE_NAME = addr.getHostName();
-            if(LAUNCH_TYPE.equals(LaunchType.SLAVE))
-                app = new AfterburnerSlaveApp(MACHINE_NAME, TEMPLATE, DEFAULT_DISPLAY_PROGRAM_OUTPUT);
-            else if(LAUNCH_TYPE.equals(LaunchType.PANEL))
-                if(!CLIENT_COMPLEXE)
-                    app = new AfterburnerClientApp();
-                else {
-                    String[] c = STRING_CONNECT.split(":");
-                    app = new AfterburnerClientApp(c[0], Integer.parseInt(c[1]), c[2]);
-                }
-            else if(LAUNCH_TYPE.equals(LaunchType.BROADCASTER))
-                app = new AfterburnerBroadcasterApp();
+            MACHINE_NAME = addr.getHostName();
+            app = LAUNCH_TYPE.createApp();
         } catch (UnknownHostException ex) {
             ConsoleLogger.printStacktrace(ex, "Hostname can not be resolved");
             System.exit(1);
