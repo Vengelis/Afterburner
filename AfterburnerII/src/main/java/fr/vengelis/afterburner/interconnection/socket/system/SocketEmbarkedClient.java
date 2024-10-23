@@ -44,7 +44,7 @@ public class SocketEmbarkedClient {
         clientSocket = new Socket(host, port);
         out = new PrintWriter(clientSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        clientInformations = new ClientInformations(UUID.randomUUID());
+        clientInformations = new ClientInformations(UUID.randomUUID(), clientSocket.getInetAddress());
 
         // Sending to server UUID for said "new connection attempted"
         out.println(clientInformations.getUuid());

@@ -84,7 +84,7 @@ public class ClientHandler implements Runnable {
                     }
                 }
             } catch (SocketException e) {
-                ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientInformations.getUuid());
+                ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientInformations.getUuid() + " (" + clientInformations.getAddress().getHostAddress() + ")");
                 disconnected = true;
                 AfterburnerSlaveApp.get().getSocketServer().forceDisconnectClient(clientInformations.getUuid());
 

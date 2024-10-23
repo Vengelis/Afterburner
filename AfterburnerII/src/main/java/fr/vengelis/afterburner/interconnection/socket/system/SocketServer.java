@@ -74,7 +74,7 @@ public class SocketServer implements PreInitHandler {
                 Socket clientSocket = serverSocket.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 UUID clientId = UUID.fromString(in.readLine());
-                ClientHandler clientHandler = new ClientHandler(clientSocket, this, new ClientInformations(clientId));
+                ClientHandler clientHandler = new ClientHandler(clientSocket, this, new ClientInformations(clientId, clientSocket.getInetAddress()));
                 addClient(clientId, clientHandler);
                 new Thread(clientHandler).start();
 
@@ -87,7 +87,7 @@ public class SocketServer implements PreInitHandler {
     public void addClient(UUID clientId, ClientHandler clientHandler) {
         if(clients.containsKey(clientId)) return;
         clients.put(clientId, clientHandler);
-        ConsoleLogger.printLine(Level.INFO, "Query client connected : " + clientId);
+        ConsoleLogger.printLine(Level.INFO, "Query client connected : " + clientId + " (" + clientHandler.getClientInformations().getAddress().getHostAddress() + ")");
         AfterburnerSlaveApp.get().getEventManager().call(new ClientConnectEvent(clientHandler.getClientInformations()));
     }
 
@@ -97,7 +97,7 @@ public class SocketServer implements PreInitHandler {
         boolean disconnected = clients.get(clientId).isDisconnected();
         clients.remove(clientId);
         if(!disconnected) {
-            ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId);
+            ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId + " (" + ci.getAddress().getHostAddress() + ")");
             AfterburnerSlaveApp.get().getEventManager().call(new ClientDisconnectEvent(ci));
         }
     }
