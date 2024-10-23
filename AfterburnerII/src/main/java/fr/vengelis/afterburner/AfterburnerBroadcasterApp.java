@@ -56,7 +56,7 @@ public class AfterburnerBroadcasterApp implements AApp{
             handlerRecorder.executeSuperPreInit();
             finalApp.loadPluginsAndProviders();
             finalApp.loadGeneralConfigs();
-            handlerRecorder.executePreInit();
+            handlerRecorder.executePreInit(finalApp);
             finalApp.initialize();
             finalApp.preparing();
             finalApp.execute();

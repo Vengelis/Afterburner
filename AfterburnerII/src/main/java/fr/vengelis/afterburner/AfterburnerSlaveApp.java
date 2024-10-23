@@ -45,6 +45,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class AfterburnerSlaveApp implements AApp {
@@ -81,6 +83,8 @@ public class AfterburnerSlaveApp implements AApp {
     private SlaveBroadcast slaveBroadcast;
     private BroadcasterWebApiHandler broadcasterWebApiHandler;
 
+    private final List<Runnable> customPreparing = new ArrayList<>();
+
     public AfterburnerSlaveApp(String machineName, String templateName, boolean defaultDisplayProgramOutput) {
         instance = this;
         MACHINE_NAME = machineName;
@@ -102,7 +106,7 @@ public class AfterburnerSlaveApp implements AApp {
             handlerRecorder.executeSuperPreInit();
             finalApp.loadPluginsAndProviders();
             finalApp.loadGeneralConfigs();
-            handlerRecorder.executePreInit();
+            handlerRecorder.executePreInit(finalApp);
             finalApp.initialize();
             finalApp.setReprepareEnabled(true);
             while (finalApp.isReprepareEnabled()) {
@@ -438,6 +442,8 @@ public class AfterburnerSlaveApp implements AApp {
                 }
             }
         }
+        eventManager.call(new PreparingEvent(PreparingEvent.Stage.CUSTOM));
+        customPreparing.forEach(Runnable::run);
         eventManager.call(new PreparingEvent(PreparingEvent.Stage.POST));
     }
 
@@ -661,5 +667,9 @@ public class AfterburnerSlaveApp implements AApp {
 
     public AfterburnerState getState() {
         return state;
+    }
+
+    public void registerCustomPreparingCode(Runnable r) {
+        this.customPreparing.add(r);
     }
 }
