@@ -74,6 +74,21 @@ public class ManagedProcess {
                     .command(Arrays.asList(event.getCmdline().toString().split(" ")))
                     .directory(new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString()))
                     .start();
+            ConsoleLogger.printLineBox(Level.INFO, "Starting process ordered. Process is alive : " + process.isAlive());
+
+            if(!process.isAlive()) {
+                ConsoleLogger.printLinesBox(Level.WARNING, new String[]{
+                        "The server did not start correctly. Java simply could not start it for the following reasons:",
+                        "- The command line is not correct.",
+                        "- The language used to start the application is not defined.",
+                        "- The path where the server program is located contains spaces and therefore it can be interpreted as an additional argument to the command.",
+                        "- The path contains quotes (with java for example this is not supported for the -jar argument).",
+                        "- Afterburner simply does not have the execution right despite the attempt to escalate privileges.",
+                        "- The server file used to start the application is simply not present (check the name in the template config file).",
+                        " ",
+                        "Before reporting an issue on github, check your settings carefully."
+                });
+            }
 
             Signal.handle(new Signal("INT"), sig -> {
                 AfterburnerSlaveApp.get().killTask("Ordered by CLI");
