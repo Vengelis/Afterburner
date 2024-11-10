@@ -87,8 +87,10 @@ public class Afterburner {
 
 
         LanguageManager.loadLanguagesFromPath(Afterburner.WORKING_AREA + File.separator + "languages");
-        LanguageManager.setCurrentLanguage("en_US");
 
+        argumentManager.addArgument("Dlanguage", null, "-l", (arg, value) -> {
+            LanguageManager.setCurrentLanguage(value);
+        });
         argumentManager.addArgument("DbaseDirectory", null, null, (arg, value) -> {
             WORKING_AREA = value.replace("\"", "").replace("<space>", " ");
         });

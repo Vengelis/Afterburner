@@ -380,7 +380,7 @@ public class AfterburnerSlaveApp implements AApp {
         eventManager.call(event);
         if(!event.isCancelled()) {
             if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.CLEANING_RENDERING_FOLDER)) {
-                ConsoleLogger.printLine(Level.INFO, "Cleaning rendering directory");
+                ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-cleaning-rendering-directory"));
                 try {
                     FileUtils.cleanDirectory(new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString()));
                 } catch (IOException e) {
@@ -388,7 +388,7 @@ public class AfterburnerSlaveApp implements AApp {
                 }
             }
             if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.COPY_TEMPLATE)) {
-                ConsoleLogger.printLine(Level.INFO, "Copying template into rendering directory");
+                ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-copying-template"));
                 try {
                     FileUtils.copyDirectory(
                             new File(ConfigGeneral.PATH_TEMPLATE.getData() + File.separator + ConfigTemplate.PATTERN_NAME.getData()),
@@ -398,7 +398,7 @@ public class AfterburnerSlaveApp implements AApp {
                 }
             }
             if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.COPY_COMMON_FILES)) {
-                ConsoleLogger.printLine(Level.INFO, "Copying commons files into rendering directory");
+                ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-copying-files"));
                 Map<Class<? extends BaseCommonFile>, List<Object>> commonFilesData = (HashMap<Class<? extends BaseCommonFile>, List<Object>>) ConfigTemplate.COMMON_FILES.getData();
                 for(Class<? extends BaseCommonFile> type : commonFilesData.keySet()) {
                     ConsoleLogger.printLine(Level.INFO, " - Copying type '" + type.getSimpleName() + "'");
@@ -419,7 +419,7 @@ public class AfterburnerSlaveApp implements AApp {
             }
 
             if(!event.getSkipStep().contains(PreparingEvent.SlavePreparingStep.MAP_PICKER)) {
-                ConsoleLogger.printLine(Level.INFO, "Checking map picker");
+                ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-check-map-picker"));
                 for (ConfigTemplate.MapPicker picker : ((ArrayList<ConfigTemplate.MapPicker>) ConfigTemplate.MAP_PICKER.getData())) {
                     if(picker.isEnabled()) {
                         Random rand = new Random();
@@ -451,7 +451,7 @@ public class AfterburnerSlaveApp implements AApp {
     @Override
     public void execute() {
         state = AfterburnerState.EXECUTING;
-        ConsoleLogger.printLine(Level.INFO, "Preparing executable");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-preparing-exec"));
 
         managedProcess = new ManagedProcess(uniqueId);
         if(!managedProcess.execute()) {
@@ -469,7 +469,7 @@ public class AfterburnerSlaveApp implements AApp {
         state = AfterburnerState.ENDING;
         eventManager.call(new EndEvent());
         if((boolean) ConfigTemplate.SAVE_ENABLED.getData()) {
-            ConsoleLogger.printLine(Level.INFO, "Map saver enabled, saving maps");
+            ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-map-saver-enabled"));
             ((Map<String, String>) ConfigTemplate.SAVE_WORLDS.getData()).forEach((map, lib) -> {
                 File rendering = new File(ConfigGeneral.PATH_RENDERING_DIRECTORY.getData().toString());
                 String mapDestName = "saved_" + System.currentTimeMillis();
@@ -487,10 +487,10 @@ public class AfterburnerSlaveApp implements AApp {
                 }
             });
         } else {
-            ConsoleLogger.printLine(Level.INFO, "Map saver disabled");
+            ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-map-saver-disabled"));
         }
         if(!isReprepareEnabled()) {
-            ConsoleLogger.printLine(Level.INFO, "Job ended, goodby world :D");
+            ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-end-life"));
             shutdown();
         }
     }

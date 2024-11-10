@@ -107,7 +107,7 @@ public class ManagedProcess {
             }
 
             int skip = 0;
-            if(!AfterburnerSlaveApp.get().isDisplayOutput()) ConsoleLogger.printLine(Level.INFO, "The managed program is running. Type 'help' to list available commands");
+            if(!AfterburnerSlaveApp.get().isDisplayOutput()) ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-managed-program-running"));
             try {
                 while ((line = br.readLine()) != null) {
                     PrintedLog log = new PrintedLog(line);

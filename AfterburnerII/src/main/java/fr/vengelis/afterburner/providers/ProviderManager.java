@@ -2,6 +2,7 @@ package fr.vengelis.afterburner.providers;
 
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.exceptions.BrokenProviderException;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.providers.impl.CommandLineProvider;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.PAPUtils;
@@ -22,7 +23,7 @@ public class ProviderManager {
     private Map<String, IAfterburnerProvider> providers = new HashMap<>();
 
     public void loadProviders(String folderPath) {
-        ConsoleLogger.printLine(Level.INFO, "Searching and registering providers");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("loading-providers"));
         File[] files = new File(folderPath).listFiles((dir, name) -> name.endsWith(".jar"));
 
         registerProvider("CommandLine", new CommandLineProvider());

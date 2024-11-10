@@ -2,6 +2,7 @@ package fr.vengelis.afterburner.plugins;
 
 import fr.vengelis.afterburner.Afterburner;
 import fr.vengelis.afterburner.exceptions.BrokenPluginException;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.PAPUtils;
 
@@ -23,7 +24,7 @@ public class PluginManager {
     private Map<String, AbstractATBPlugin> allPlugins = new HashMap<>();
 
     public void loadPlugins(String folderPath) {
-        ConsoleLogger.printLine(Level.INFO, "Searching and registering plugin");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("loading-plugins"));
         File[] files = new File(folderPath).listFiles((dir, name) -> name.endsWith(".jar"));
 
         if (files != null) {
