@@ -5,6 +5,7 @@ import fr.vengelis.afterburner.cli.command.AtbCommand;
 import fr.vengelis.afterburner.cli.command.CommandResult;
 import fr.vengelis.afterburner.cli.command.CommandResultReader;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.BufferedReader;
@@ -73,18 +74,18 @@ public class ClientHandler implements Runnable {
                     */
                     else {
                         if(inputLine.startsWith("Server:EchoLog:")) continue;
-                        ConsoleLogger.printLine(Level.INFO, "[SocketServer] Received from " + clientInformations.getUuid() + ": " + inputLine);
+                        ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("socket-server-received-instruction"),clientInformations.getUuid(),inputLine));
                         if(!inputLine.trim().isEmpty()) {
                             CommandResult<?> rtn = AfterburnerSlaveApp.get().getCliManager().execute(inputLine, AtbCommand.CommandSide.SERVER);
                             CommandResultReader.read(rtn);
                             AfterburnerSlaveApp.get().getSocketServer().sendAllClient("Echo:Type=" + rtn.getResponseData().getResponseData().getClass().getName() + "---ATBSPLITER---" + rtn.serialize());
                         } else {
-                            out.println("Echo: No command entered. Please try again.");
+                            out.println(LanguageManager.translate("error-no-command-entered"));
                         }
                     }
                 }
             } catch (SocketException e) {
-                ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientInformations.getUuid() + " (" + clientInformations.getAddress().getHostAddress() + ")");
+                ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("socket-client-disconnect"),clientInformations.getUuid(),clientInformations.getAddress().getHostAddress()));
                 disconnected = true;
                 AfterburnerSlaveApp.get().getSocketServer().forceDisconnectClient(clientInformations.getUuid());
 

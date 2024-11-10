@@ -6,6 +6,7 @@ import fr.vengelis.afterburner.events.impl.common.ClientConnectEvent;
 import fr.vengelis.afterburner.events.impl.common.ClientDisconnectEvent;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.handler.PreInitHandler;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.BufferedReader;
@@ -69,7 +70,7 @@ public class SocketServer implements PreInitHandler {
                 50,
                 this.endpoint
         )) {
-            ConsoleLogger.printLineBox(Level.INFO, "Query socket server started on '" + endpoint.getHostAddress() + ":" + ConfigGeneral.QUERY_PORT.getData() + "'");
+            ConsoleLogger.printLineBox(Level.INFO, String.format(LanguageManager.translate("socket-server-started"),endpoint.getHostAddress(),ConfigGeneral.QUERY_PORT.getData()));
             while (running) {
                 Socket clientSocket = serverSocket.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -87,7 +88,7 @@ public class SocketServer implements PreInitHandler {
     public void addClient(UUID clientId, ClientHandler clientHandler) {
         if(clients.containsKey(clientId)) return;
         clients.put(clientId, clientHandler);
-        ConsoleLogger.printLine(Level.INFO, "Query client connected : " + clientId + " (" + clientHandler.getClientInformations().getAddress().getHostAddress() + ")");
+        ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("socket-new-client"),clientId,clientHandler.getClientInformations().getAddress().getHostAddress()));
         AfterburnerSlaveApp.get().getEventManager().call(new ClientConnectEvent(clientHandler.getClientInformations()));
     }
 
@@ -97,7 +98,7 @@ public class SocketServer implements PreInitHandler {
         boolean disconnected = clients.get(clientId).isDisconnected();
         clients.remove(clientId);
         if(!disconnected) {
-            ConsoleLogger.printLine(Level.INFO, "Query client disconnected: " + clientId + " (" + ci.getAddress().getHostAddress() + ")");
+            ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("socket-client-disconnect"),clientId,ci.getAddress().getHostAddress()));
             AfterburnerSlaveApp.get().getEventManager().call(new ClientDisconnectEvent(ci));
         }
     }

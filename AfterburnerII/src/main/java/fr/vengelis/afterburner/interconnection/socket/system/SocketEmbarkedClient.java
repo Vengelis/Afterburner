@@ -10,6 +10,7 @@ import fr.vengelis.afterburner.events.impl.client.ServerConnectEvent;
 import fr.vengelis.afterburner.events.impl.client.ServerDisconnectEvent;
 import fr.vengelis.afterburner.events.impl.common.PrintedLogEvent;
 import fr.vengelis.afterburner.events.impl.common.SendInstructionEvent;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.logs.PrintedLog;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
@@ -54,11 +55,11 @@ public class SocketEmbarkedClient {
 
         String response = in.readLine();
         if (!"Authentication successful".equals(response)) {
-            ConsoleLogger.printLine(Level.SEVERE, "Authentication failed");
+            ConsoleLogger.printLine(Level.SEVERE, LanguageManager.translate("socket-auth-failed"));
             stop();
             return;
         } else {
-            ConsoleLogger.printLine(Level.INFO, "Authentication successfully");
+            ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("socket-auth-successfully"));
             AfterburnerClientApp.get().getEventManager().call(new ServerConnectEvent());
         }
 
@@ -73,15 +74,15 @@ public class SocketEmbarkedClient {
             try {
                 while ((serverMessage = in.readLine()) != null) {
                     if (serverMessage.equalsIgnoreCase("Server: wrong password")) {
-                        ConsoleLogger.printLine(Level.INFO, "Authentification failed. Disconnected by server");
+                        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("socket-auth-failed") + " " + LanguageManager.translate("socket-disconnected-by-server"));
                         stop();
                         break;
                     } else if (serverMessage.equalsIgnoreCase("Server: disconnect")) {
-                        ConsoleLogger.printLine(Level.INFO, "Disconnected by server");
+                        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("socket-disconnected-by-server"));
                         stop();
                         break;
                     } else if (serverMessage.equalsIgnoreCase("Server:RequireClientDisconnect")) {
-                        ConsoleLogger.printLine(Level.INFO, "Disconnected by server");
+                        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("socket-disconnected-by-server"));
                         stop();
                         break;
                     } else if (serverMessage.startsWith("dli:")) {

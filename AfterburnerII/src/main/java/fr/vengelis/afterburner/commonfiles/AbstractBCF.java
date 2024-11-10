@@ -1,5 +1,6 @@
 package fr.vengelis.afterburner.commonfiles;
 
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.util.logging.Level;
@@ -12,7 +13,7 @@ public abstract class AbstractBCF implements BaseCommonFile{
     public AbstractBCF(String name, boolean enabled) {
         this.name = name;
         this.enabled = enabled;
-        ConsoleLogger.printLine(Level.INFO, "    | " + this.name + " (Enabled : " + this.enabled + ")");
+        ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("bcf-enabled"), this.name, this.enabled));
     }
 
     @Override

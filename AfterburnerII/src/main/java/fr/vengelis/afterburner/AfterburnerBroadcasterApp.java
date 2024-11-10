@@ -9,6 +9,7 @@ import fr.vengelis.afterburner.events.impl.common.PreparingEvent;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.plugins.PluginManager;
 import fr.vengelis.afterburner.providers.ProviderManager;
 import fr.vengelis.afterburner.runnables.RunnableManager;
@@ -106,7 +107,7 @@ public class AfterburnerBroadcasterApp implements AApp{
     public void initialize() {
         if(alreadyInit) return;
         alreadyInit = true;
-        ConsoleLogger.printLine(Level.INFO, "Initializing");
+        ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("atb-initializing"));
 
         new Thread(() -> {
             while (true) {

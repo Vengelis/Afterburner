@@ -8,6 +8,7 @@ import fr.vengelis.afterburner.events.impl.common.LoadEvent;
 import fr.vengelis.afterburner.exceptions.BrokenConfigException;
 import fr.vengelis.afterburner.exceptions.ProviderUnknownInstructionException;
 import fr.vengelis.afterburner.exceptions.UnknownProviderException;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.providers.IAfterburnerProvider;
 import fr.vengelis.afterburner.providers.ProviderInstructions;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
@@ -36,6 +37,7 @@ public class AfterburnerAppCommon {
             app.getExporter().createFolder(Afterburner.WORKING_AREA + File.separator + "plugins");
 
             app.getExporter().createFolder(Afterburner.WORKING_AREA + File.separator + "providers");
+
         } catch (IOException e) {
             ConsoleLogger.printStacktrace(e);
             System.exit(1);
@@ -48,7 +50,7 @@ public class AfterburnerAppCommon {
         app.getProviderManager().getProviders().forEach((n, p) -> {
             if(p instanceof AsConfig) {
                 try {
-                    ConsoleLogger.printLine(Level.INFO, "Loading '" + n + "' provider configuration");
+                    ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("loading-provider-config"), n));
                     ((AsConfig) p).loadConfig();
                 } catch (Exception e) {
                     ConsoleLogger.printStacktrace(e);
@@ -58,7 +60,7 @@ public class AfterburnerAppCommon {
 
         app.getPluginManager().loadPlugins(Afterburner.WORKING_AREA + File.separator + "plugins");
         app.getPluginManager().getCompatiblePlugins().forEach((n, p) -> {
-            ConsoleLogger.printLine(Level.INFO, "Loading plugin '" + n + "'");
+            ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("loading-plugin"), n));
             try {
                 p.onLoad();
             } catch (Exception e) {
@@ -66,7 +68,7 @@ public class AfterburnerAppCommon {
             }
             if(p instanceof AsConfig) {
                 try {
-                    ConsoleLogger.printLine(Level.INFO, "Loading '" + n + "' plugin configuration");
+                    ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("loading-plugin-configuration"), n));
                     ((AsConfig) p).loadConfig();
                 } catch (Exception e) {
                     ConsoleLogger.printStacktrace(e);
@@ -85,7 +87,7 @@ public class AfterburnerAppCommon {
 
     public static void loadGeneralConfig(AApp app) {
         try {
-            ConsoleLogger.printLine(Level.INFO, "Loading generals configurations");
+            ConsoleLogger.printLine(Level.INFO, LanguageManager.translate("loading-general-configuration"));
 
             // General Config
             File config = new File(Afterburner.WORKING_AREA + File.separator + "config.yml");
@@ -95,7 +97,7 @@ public class AfterburnerAppCommon {
             Map<String, Object> data = yaml.load(stm);
             ConfigGeneral.CONFIG_VERSION.setData(data.get("config-version"));
             if(ConfigGeneral.CONFIG_VERSION.isDeprecated((int) ConfigGeneral.CONFIG_VERSION.getData())) {
-                ConsoleLogger.printLineBox(Level.SEVERE, "config.yml was not updated. Please update your config version !");
+                ConsoleLogger.printLineBox(Level.SEVERE, LanguageManager.translate("error-general-config-outdated"));
                 System.exit(1);
             }
 

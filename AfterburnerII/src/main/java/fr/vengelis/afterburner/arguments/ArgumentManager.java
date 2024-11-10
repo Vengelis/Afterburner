@@ -29,6 +29,11 @@ public class ArgumentManager {
                 if (argument != null) {
                     argument.apply(value);
                 }
+            } else {
+                Argument argument = getArgument(arg);
+                if (argument != null) {
+                    argument.apply(arg);
+                }
             }
         }
     }

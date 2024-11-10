@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import fr.vengelis.afterburner.AfterburnerBroadcasterApp;
 import fr.vengelis.afterburner.AfterburnerState;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.time.Instant;
@@ -83,10 +84,10 @@ public class SlaveBroadcast {
     public void actualise() {
         if(BASE_REMOVE == Instant.now().getEpochSecond() - lastContact) {
             available = false;
-            ConsoleLogger.printLine(Level.INFO, "Slave " + this.getUuid().toString() + " (name : " + this.getName() + ") not available !");
+            ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("broadcaster-slave-not-available"),this.getUuid().toString(), this.getName()));
         }
         if(!available && ((BASE_REMOVE + 5) < Instant.now().getEpochSecond() - lastContact)) {
-            ConsoleLogger.printLine(Level.INFO, "Slave " + this.getUuid().toString() + " (name : " + this.getName() + ") expired and removed !");
+            ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("broadcaster-slave-expired-removed"),this.getUuid().toString(), this.getName()));
             AfterburnerBroadcasterApp.get().getSlaves().remove(this);
         }
     }

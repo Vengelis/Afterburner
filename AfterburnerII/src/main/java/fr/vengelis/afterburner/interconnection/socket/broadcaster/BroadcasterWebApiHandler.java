@@ -3,6 +3,7 @@ package fr.vengelis.afterburner.interconnection.socket.broadcaster;
 import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.configurations.ConfigGeneral;
 import fr.vengelis.afterburner.events.impl.slave.SendUpdateBroadcasterEvent;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -76,15 +77,15 @@ public class BroadcasterWebApiHandler {
             ResponseEntity<String> response = restTemplate.exchange(url + action.getRoute(), method, request, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                ConsoleLogger.printLine(Level.INFO, "[Broadcaster] > Action '" + action.name() + "' successfully performed");
+                ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("broadcaster-success-perform"), action.name()));
                 ConsoleLogger.printVerbose(Level.INFO, response.getBody());
                 attemptCallBroadcasterCount = 0;
             } else {
-                ConsoleLogger.printLine(Level.INFO, "[Broadcaster] > Action '" + action.name() + "' not performed (Err Code: " + response.getStatusCode() + ")");
+                ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("broadcaster-error-perform"), action.name(), response.getStatusCode()));
             }
         } catch (ResourceAccessException e) {
             attemptCallBroadcasterCount += 1;
-            ConsoleLogger.printLine(Level.WARNING, "[Broadcaster] > Request timed out");
+            ConsoleLogger.printLine(Level.WARNING, LanguageManager.translate("broadcaster-timeout"));
             if(attemptCallBroadcasterCount == 10) {
                 attemptCallBroadcasterFailed = true;
                 ConsoleLogger.printLineBox(Level.SEVERE, "[Broadcaster] > Query broadcaster requests was definitely blocked because all requests timed out");

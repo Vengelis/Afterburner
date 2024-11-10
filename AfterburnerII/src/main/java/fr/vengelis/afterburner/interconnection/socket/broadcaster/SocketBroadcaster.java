@@ -4,6 +4,7 @@ import com.google.gson.JsonSyntaxException;
 import fr.vengelis.afterburner.AfterburnerBroadcasterApp;
 import fr.vengelis.afterburner.configurations.ConfigBroadcaster;
 import fr.vengelis.afterburner.events.impl.broadcaster.PerformActionEvent;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +59,7 @@ public class SocketBroadcaster {
             return new ResponseEntity<>("Wrong informations in body", HttpStatus.BAD_REQUEST);
         }
 
-        ConsoleLogger.printLine(Level.INFO, "New client : " + sb.getUuid().toString() + " (Name : " + sb.getName() + ")");
+        ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("socket-new-client"),sb.getUuid().toString(),sb.getName()));
 
         for (SlaveBroadcast slave : AfterburnerBroadcasterApp.get().getSlaves()) {
             if(slave.getUuid().equals(sb.getUuid()))
@@ -95,7 +96,7 @@ public class SocketBroadcaster {
         }
         if(!finded) {
             AfterburnerBroadcasterApp.get().getSlaves().add(sb);
-            ConsoleLogger.printLine(Level.INFO, "New client : " + sb.getUuid().toString() + " (Name : " + sb.getName() + ")");
+            ConsoleLogger.printLine(Level.INFO, String.format(LanguageManager.translate("socket-new-client"),sb.getUuid().toString(),sb.getName()));
             return new ResponseEntity<>("Client updated", HttpStatus.OK);
         } else {
             SlaveBroadcast inded = AfterburnerBroadcasterApp.get().getSlaves().stream()

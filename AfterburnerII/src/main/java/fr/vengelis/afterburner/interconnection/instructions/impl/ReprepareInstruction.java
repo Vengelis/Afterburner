@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import fr.vengelis.afterburner.AfterburnerSlaveApp;
 import fr.vengelis.afterburner.events.impl.slave.ReprepareRequestEvent;
 import fr.vengelis.afterburner.interconnection.instructions.BaseCommunicationInstruction;
+import fr.vengelis.afterburner.language.LanguageManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.util.logging.Level;
@@ -24,7 +25,7 @@ public class ReprepareInstruction extends BaseCommunicationInstruction<Boolean> 
         AfterburnerSlaveApp.get().getEventManager().call(event1);
         if(!event1.isCancelled()) {
             AfterburnerSlaveApp.get().setReprepareEnabled(true);
-            ConsoleLogger.printLine(Level.CONFIG, "Afterburner will run the process again at the end of this process.");
+            ConsoleLogger.printLine(Level.CONFIG, LanguageManager.translate("atb-reprepare-instruction"));
             return true;
         } else {
             return false;
