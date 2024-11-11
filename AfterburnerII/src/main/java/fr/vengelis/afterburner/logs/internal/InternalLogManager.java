@@ -1,8 +1,6 @@
 package fr.vengelis.afterburner.logs.internal;
 
 import fr.vengelis.afterburner.Afterburner;
-import fr.vengelis.afterburner.handler.HandlerRecorder;
-import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.BufferedWriter;
 import java.io.File;
