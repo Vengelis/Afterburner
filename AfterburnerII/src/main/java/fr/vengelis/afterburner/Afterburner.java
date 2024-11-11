@@ -3,6 +3,7 @@ package fr.vengelis.afterburner;
 import fr.vengelis.afterburner.arguments.ArgumentManager;
 import fr.vengelis.afterburner.handler.HandlerRecorder;
 import fr.vengelis.afterburner.language.LanguageManager;
+import fr.vengelis.afterburner.logs.internal.InternalLogManager;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.ResourceExporter;
 import fr.vengelis.afterburner.utils.updater.VersionChecker;
@@ -49,6 +50,18 @@ public class Afterburner {
     }
 
     public static void start() {
+
+        try {
+            WORKING_AREA = new File(Afterburner.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            System.out.println("Working Area : " + WORKING_AREA);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        final InternalLogManager ILM = new InternalLogManager();
+        ILM.init();
+
         ConsoleLogger.printLine(Level.INFO, "#-------------------------------------------------------------------------------------------------------------------------#");
         ConsoleLogger.printLine(Level.INFO, "|     _       __   _                   _                                                                                  |");
         ConsoleLogger.printLine(Level.INFO, "|    / \\     / _| | |_    ___   _ __  | |__    _   _   _ __   _ __     ___   _ __                                         |");
@@ -67,13 +80,6 @@ public class Afterburner {
 
         VersionChecker.check();
 
-        try {
-            WORKING_AREA = new File(Afterburner.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-        } catch (URISyntaxException e) {
-            ConsoleLogger.printStacktrace(e);
-            System.exit(1);
-        }
-
         ArgumentManager argumentManager = new ArgumentManager();
 
         exporter.createFolder(Afterburner.WORKING_AREA + File.separator + "languages");
@@ -90,9 +96,6 @@ public class Afterburner {
 
         argumentManager.addArgument("Dlanguage", null, "-l", (arg, value) -> {
             LanguageManager.setCurrentLanguage(value);
-        });
-        argumentManager.addArgument("DbaseDirectory", null, null, (arg, value) -> {
-            WORKING_AREA = value.replace("\"", "").replace("<space>", " ");
         });
         argumentManager.addArgument("Dtemplate", null, null, (arg, value) -> {
             TEMPLATE = value.replace("\"", "").replace("<space>", " ");
@@ -133,8 +136,6 @@ public class Afterburner {
 
         argumentManager.parseArguments(stArgs);
 
-        ConsoleLogger.printLine(Level.CONFIG, "Working Area : " + WORKING_AREA);
-
         HandlerRecorder handlerRecorder = new HandlerRecorder();
         AApp app = null;
 
@@ -168,6 +169,10 @@ public class Afterburner {
             ConsoleLogger.printStacktrace(e);
             return null;
         }
+    }
+
+    public static ResourceExporter getExporter() {
+        return exporter;
     }
 
     public static LaunchType getLaunchType() {

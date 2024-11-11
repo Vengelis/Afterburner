@@ -2,7 +2,7 @@ package fr.vengelis.afterburner.events.impl.common;
 
 import fr.vengelis.afterburner.events.AbstractEvent;
 import fr.vengelis.afterburner.events.CancellableEvent;
-import fr.vengelis.afterburner.logs.PrintedLog;
+import fr.vengelis.afterburner.logs.managedprocess.PrintedLog;
 
 /**
  * This class represents the PrintedLogEvent in the application.

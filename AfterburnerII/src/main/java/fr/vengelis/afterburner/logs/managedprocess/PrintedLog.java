@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.logs;
+package fr.vengelis.afterburner.logs.managedprocess;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 public class PrintedLog {
 
+    // Needed when you want to transform the Level type into a Json object by Gson. Another neat trick...
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Level.class, new LevelTypeAdapter())
             .create();
@@ -50,6 +51,7 @@ public class PrintedLog {
     }
 
     public void save() {
+        // This method is only used by SLAVE mode hence the fact that we directly use the slave instance here
         AfterburnerSlaveApp.get().getLogHistory().add(this);
     }
 

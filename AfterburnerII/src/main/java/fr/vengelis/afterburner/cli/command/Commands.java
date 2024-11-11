@@ -8,7 +8,7 @@ import fr.vengelis.afterburner.events.impl.common.PrintedLogEvent;
 import fr.vengelis.afterburner.interconnection.instructions.impl.CleanLogHistoryInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.GetAtbInfosInstruction;
 import fr.vengelis.afterburner.interconnection.instructions.impl.ReprepareInstruction;
-import fr.vengelis.afterburner.logs.Skipper;
+import fr.vengelis.afterburner.logs.managedprocess.Skipper;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 import fr.vengelis.afterburner.utils.PAPUtils;
 

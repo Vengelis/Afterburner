@@ -20,8 +20,8 @@ import fr.vengelis.afterburner.interconnection.socket.broadcaster.SlaveBroadcast
 import fr.vengelis.afterburner.interconnection.socket.broadcaster.BroadcasterWebApiHandler;
 import fr.vengelis.afterburner.interconnection.socket.system.SocketServer;
 import fr.vengelis.afterburner.language.LanguageManager;
-import fr.vengelis.afterburner.logs.LogSkipperManager;
-import fr.vengelis.afterburner.logs.PrintedLog;
+import fr.vengelis.afterburner.logs.managedprocess.LogSkipperManager;
+import fr.vengelis.afterburner.logs.managedprocess.PrintedLog;
 import fr.vengelis.afterburner.mprocess.ManagedProcess;
 import fr.vengelis.afterburner.mprocess.argwrapper.ArgumentWrapperManager;
 import fr.vengelis.afterburner.plugins.PluginManager;
@@ -46,8 +46,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class AfterburnerSlaveApp implements AApp {

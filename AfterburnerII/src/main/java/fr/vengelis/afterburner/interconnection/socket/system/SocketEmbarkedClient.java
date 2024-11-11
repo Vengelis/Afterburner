@@ -11,7 +11,7 @@ import fr.vengelis.afterburner.events.impl.client.ServerDisconnectEvent;
 import fr.vengelis.afterburner.events.impl.common.PrintedLogEvent;
 import fr.vengelis.afterburner.events.impl.common.SendInstructionEvent;
 import fr.vengelis.afterburner.language.LanguageManager;
-import fr.vengelis.afterburner.logs.PrintedLog;
+import fr.vengelis.afterburner.logs.managedprocess.PrintedLog;
 import fr.vengelis.afterburner.utils.ConsoleLogger;
 
 import java.io.BufferedReader;

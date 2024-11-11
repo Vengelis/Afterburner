@@ -8,6 +8,12 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.logging.Level;
 
+/*
+* Vengelis's notes:
+* Class to adapt the Level object which is not adapted by default for Gson
+* And because I screwed up by default by using the serialization and serialization system I duplicated the methods of writing and reading objects.
+* Yeah there I really pooped in the glue
+* */
 public class LevelTypeAdapter extends TypeAdapter<Level> implements JsonSerializer<Level>, JsonDeserializer<Level> {
 
     @Override

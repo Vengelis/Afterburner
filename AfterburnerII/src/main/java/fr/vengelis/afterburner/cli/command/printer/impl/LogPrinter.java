@@ -1,7 +1,7 @@
 package fr.vengelis.afterburner.cli.command.printer.impl;
 
 import fr.vengelis.afterburner.cli.command.printer.IConsolePrinter;
-import fr.vengelis.afterburner.logs.PrintedLog;
+import fr.vengelis.afterburner.logs.managedprocess.PrintedLog;
 
 public class LogPrinter implements IConsolePrinter<PrintedLog> {
 

@@ -8,6 +8,8 @@
 package fr.vengelis.afterburner.utils;
 
 import fr.vengelis.afterburner.Afterburner;
+import fr.vengelis.afterburner.logs.internal.InternalLog;
+import fr.vengelis.afterburner.logs.internal.InternalLogManager;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -60,14 +62,16 @@ public class ConsoleLogger {
 
     public static void printLine(Level level, String message) {
         if(!level.equals(Level.FINEST)) System.out.println(getCurrentTime(level) + message);
+        new InternalLog(level, message).save();
     }
 
     public static void printLines(Level level, String[] messages) {
         for(String message : messages) {
-            System.out.println(getCurrentTime(level) + message);
+            printLine(level, message);
         }
     }
 
+    // TODO : Support ILM
     public static void printLineBox(Level level, String message) {
         StringBuilder spaceBar = new StringBuilder("=");
         StringBuilder spaceBarSpace = new StringBuilder(" ");
@@ -106,6 +110,7 @@ public class ConsoleLogger {
         System.out.println(getCurrentTime(level) + "#" + spaceBar +"#");
     }
 
+    // TODO : Support ILM
     public static void printLinesBox(Level level, String[] message) {
         StringBuilder spaceBar = new StringBuilder("=");
         StringBuilder spaceBarSpace = new StringBuilder(" ");
@@ -148,10 +153,12 @@ public class ConsoleLogger {
     }
 
 
+    // TODO : Support ILM
     public static void printStacktrace(Throwable throwable) {
         printStacktrace(throwable, new String[0]);
     }
 
+    // TODO : Support ILM
     public static void printStacktrace(Throwable throwable, String... messages) {
         StringBuilder spaceBar = new StringBuilder("=");
         StringBuilder spaceBarSpace = new StringBuilder(" ");
@@ -181,6 +188,7 @@ public class ConsoleLogger {
         System.err.println(prefix + "#" + spaceBar +"#");
     }
 
+    // TODO : Support ILM
     private static void complementBoxStacktrace(Throwable throwable, String prefix) {
         System.err.println(prefix + throwable);
         StackTraceElement[] enclosingTrace = Thread.currentThread().getStackTrace();

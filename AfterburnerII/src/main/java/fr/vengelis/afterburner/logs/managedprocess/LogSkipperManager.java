@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.logs;
+package fr.vengelis.afterburner.logs.managedprocess;
 
 import java.util.ArrayList;
 import java.util.List;

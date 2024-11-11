@@ -1,4 +1,4 @@
-package fr.vengelis.afterburner.logs;
+package fr.vengelis.afterburner.logs.managedprocess;
 
 import java.util.function.Consumer;
 import java.util.regex.Pattern;

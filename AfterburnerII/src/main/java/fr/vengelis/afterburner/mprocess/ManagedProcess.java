@@ -6,8 +6,8 @@ import fr.vengelis.afterburner.configurations.ConfigTemplate;
 import fr.vengelis.afterburner.events.impl.common.ExecutableEvent;
 import fr.vengelis.afterburner.events.impl.common.PrintedLogEvent;
 import fr.vengelis.afterburner.language.LanguageManager;
-import fr.vengelis.afterburner.logs.PrintedLog;
-import fr.vengelis.afterburner.logs.Skipper;
+import fr.vengelis.afterburner.logs.managedprocess.PrintedLog;
+import fr.vengelis.afterburner.logs.managedprocess.Skipper;
 import fr.vengelis.afterburner.mprocess.argwrapper.BaseArgumentWrapper;
 import fr.vengelis.afterburner.mprocess.argwrapper.IArgWrapper;
 import fr.vengelis.afterburner.mprocess.argwrapper.impl.JavaArguments;
@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class ManagedProcess {
